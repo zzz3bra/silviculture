@@ -1,0 +1,31 @@
+os:
+  - linux
+dist: trusty
+language: java
+install: true
+jdk:
+  - oraclejdk8
+sudo: false
+branches:
+  only:
+  - master
+cache:
+  directories:
+    - $HOME/.m2
+env:
+  global:
+    - GIT_COMMITTED_AT=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then git log -1 --pretty=format:%ct; else git log -1 --skip 1 --pretty=format:%ct; fi)
+addons:
+  apt:
+    packages:
+      - oracle-java8-set-default
+before_install:
+  - java -version
+script:
+  - chmod +x ./mvnw
+  - ./mvnw com.heroku.sdk:heroku-maven-plugin:deploy
+notifications:
+  webhooks:
+    on_success: change
+    on_failure: always
+    on_start: false
