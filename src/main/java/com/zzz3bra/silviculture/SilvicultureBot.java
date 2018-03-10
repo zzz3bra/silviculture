@@ -41,11 +41,15 @@ public class SilvicultureBot extends TelegramLongPollingBot {
 
     public void checkCarsAndPostNewIfAvailable(Supplier<Result> carsSupplier, String chatId) {
         Map<String, Advertisement> advertisements = carsSupplier.get().getAdvertisements();
+        boolean firstRun = carAdvertisementMap.isEmpty();
         advertisements.forEach((adId, advertisement) -> {
             if (carAdvertisementMap.containsKey(adId)) {
                 return;
             }
             carAdvertisementMap.put(adId, advertisement);
+            if (firstRun) {
+                return;
+            }
             prepareStraightForwardMessages(advertisement, chatId).forEach(sendMessage -> {
                 try {
                     execute(sendMessage);
