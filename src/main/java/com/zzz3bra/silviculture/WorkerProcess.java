@@ -15,7 +15,13 @@ public class WorkerProcess {
         SilvicultureBot bot = new SilvicultureBot();
         botsApi.registerBot(bot);
         ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-        executorService.scheduleAtFixedRate(() -> bot.checkCarsAndPostNewIfAvailable(CarParser::getSilvias, System.getenv("ChannelId")), 0, 1, TimeUnit.HOURS);
+        executorService.scheduleAtFixedRate(() -> {
+            try {
+                bot.checkCarsAndPostNewIfAvailable(CarParser::getSilvias, System.getenv("ChannelId"));
+            } catch (Exception exception) {
+                exception.printStackTrace();
+            }
+        }, 0, 1, TimeUnit.HOURS);
     }
 
 }
