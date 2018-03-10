@@ -17,7 +17,7 @@ public class WorkerProcess {
         ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
         executorService.scheduleAtFixedRate(() -> {
             try {
-                bot.checkCarsAndPostNewIfAvailable(CarParser::getSilvias, System.getenv("ChannelId"));
+                bot.checkCarsAndPostNewIfAvailable(CarParser::getOldRattletraps, System.getenv("ChannelId"));
             } catch (Exception exception) {
                 exception.printStackTrace();
             }
