@@ -36,6 +36,10 @@ public class CarParser {
         return getResult(parametersMap);
     }
 
+    public static Result getResult() {
+        return getResult(getParameters());
+    }
+
     public static Result getResult(Map<String, ?> parametersMap) {
         Result result = with().formParams(parametersMap).contentType(ContentType.URLENC).post("https://ab.onliner.by/search").getBody().as(Response.class, ObjectMapperType.JACKSON_2).getResult();
         Matcher matcher = COST_PATTERN.matcher(result.getContent());
