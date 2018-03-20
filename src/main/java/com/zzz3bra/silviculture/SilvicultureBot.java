@@ -13,13 +13,16 @@ import org.telegram.telegrambots.exceptions.TelegramApiException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.function.Consumer;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
@@ -29,10 +32,11 @@ public class SilvicultureBot extends TelegramLongPollingBot {
     private static final String REMOVE = "/remove ";
     private static final String CLEAR = "/clear";
     private static final String RESET = "/reset";
+    private static final String STATUS = "/status";
 
     private final Map<Pair<String, String>, List<Pair<String, String>>> carManModelMap;
     private final Map<String, Advertisement> carAdvertisementMap = new HashMap<>();
-    private final List<Pair<Integer, Integer>> requestCarModels = new ArrayList<>();
+    private final Set<Pair<Integer, Integer>> requestCarModels = new HashSet<>();
 
     public SilvicultureBot(Map<Pair<String, String>, List<Pair<String, String>>> carManModelMap) {
         super();
@@ -63,6 +67,11 @@ public class SilvicultureBot extends TelegramLongPollingBot {
             toBeSent.add(new SendMessage().setText("Запрашиваемые модели очищены, буду теперь молчать в трубочку..."));
         }
 
+        if (message.getText().equals(STATUS)) {
+            String cars = carManModelMap.entrySet().stream().flatMap(entry -> entry.getValue().stream().map(pair -> ImmutablePair.of(entry.getKey(), pair))).filter(pair -> requestCarModels.contains(ImmutablePair.of(Integer.valueOf(pair.getLeft().getValue()), Integer.valueOf(pair.getRight().getValue())))).map(pair -> pair.getLeft().getKey() + " " + pair.getRight().getKey()).collect(joining("\n"));
+            toBeSent.add(new SendMessage().setText("Отслеживаемые автомобили: \n" + cars));
+        }
+
         doAddOrRemoveActionIfSupported(message.getText(), toBeSent);
 
         toBeSent.forEach(sendMessage -> {
@@ -76,17 +85,20 @@ public class SilvicultureBot extends TelegramLongPollingBot {
 
     private void doAddOrRemoveActionIfSupported(String action, List<SendMessage> toBeSent) {
         String[] parts;
-        Consumer<Pair<Integer, Integer>> pairAction;
+        Function<Pair<Integer, Integer>, Boolean> pairAction;
         List<SendMessage> actionSuccessMessages = new ArrayList<>();
+        List<SendMessage> actionFailedMessages = new ArrayList<>();
         if (action.startsWith(ADD)) {
             parts = action.substring(ADD.length()).toLowerCase().split(" ");
             pairAction = requestCarModels::add;
             actionSuccessMessages.add(new SendMessage().setText("Слежу (за лупой) ..."));
             actionSuccessMessages.add(new SendMessage().setText("https://avatanplus.com/files/resources/mid/5a105f460a1a615fcff42999.png"));
+            actionFailedMessages.add(new SendMessage().setText("Данный автомобиль уже отслеживается"));
         } else if (action.startsWith(REMOVE)) {
             parts = action.substring(REMOVE.length()).toLowerCase().split(" ");
             pairAction = requestCarModels::remove;
             actionSuccessMessages.add(new SendMessage().setText("Поиск удален"));
+            actionFailedMessages.add(new SendMessage().setText("Данный автомобиль не отслеживается"));
         } else {
             return;
         }
@@ -102,8 +114,8 @@ public class SilvicultureBot extends TelegramLongPollingBot {
                 if (!modelPair.isPresent()) {
                     toBeSent.add(new SendMessage().setText("Не могу найти модель, хохлушки кончились"));
                 } else {
-                    pairAction.accept(ImmutablePair.of(Integer.valueOf(manPair.get().getValue()), Integer.valueOf(modelPair.get().getValue())));
-                    toBeSent.addAll(actionSuccessMessages);
+                    boolean isActionSuccessfull = pairAction.apply(ImmutablePair.of(Integer.valueOf(manPair.get().getValue()), Integer.valueOf(modelPair.get().getValue())));
+                    toBeSent.addAll(isActionSuccessfull ? actionSuccessMessages : actionFailedMessages);
                 }
             }
         }
