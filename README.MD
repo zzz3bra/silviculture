@@ -3,6 +3,6 @@
 
 #### Feel free to subscribe our Telegram channel!
 ## Telegram
-- bot name - `@silviculture_bot` (does not speaks yet)
+- bot name - `@silviculture_bot`
 - channel name - `@silviculture`
 

@@ -22,6 +22,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
@@ -38,7 +39,7 @@ public class SilvicultureBot extends TelegramLongPollingBot {
     private final Map<String, Advertisement> carAdvertisementMap = new HashMap<>();
     private final Set<Pair<Integer, Integer>> requestCarModels = new HashSet<>();
 
-    public SilvicultureBot(Map<Pair<String, String>, List<Pair<String, String>>> carManModelMap) {
+    SilvicultureBot(Map<Pair<String, String>, List<Pair<String, String>>> carManModelMap) {
         super();
         this.carManModelMap = carManModelMap;
     }
@@ -72,7 +73,7 @@ public class SilvicultureBot extends TelegramLongPollingBot {
             toBeSent.add(new SendMessage().setText("Отслеживаемые автомобили: \n" + cars));
         }
 
-        doAddOrRemoveActionIfSupported(message.getText(), toBeSent);
+        toBeSent = doAddOrRemoveActionIfSupported(message.getText());
 
         toBeSent.forEach(sendMessage -> {
             try {
@@ -83,7 +84,7 @@ public class SilvicultureBot extends TelegramLongPollingBot {
         });
     }
 
-    private void doAddOrRemoveActionIfSupported(String action, List<SendMessage> toBeSent) {
+    List<SendMessage> doAddOrRemoveActionIfSupported(String action) {
         String[] parts;
         Function<Pair<Integer, Integer>, Boolean> pairAction;
         List<SendMessage> actionSuccessMessages = new ArrayList<>();
@@ -100,25 +101,27 @@ public class SilvicultureBot extends TelegramLongPollingBot {
             actionSuccessMessages.add(new SendMessage().setText("Поиск удален"));
             actionFailedMessages.add(new SendMessage().setText("Данный автомобиль не отслеживается"));
         } else {
-            return;
+            return emptyList();
         }
 
+        List<SendMessage> actionOutcomeMessages = new ArrayList<>();
         if (parts.length > 2) {
-            toBeSent.add(new SendMessage().setText("Я хочу спать а не парсить марки и модели с пробелами - прямо как в твоих познаниях о теории струн"));
+            actionOutcomeMessages.add(new SendMessage().setText("Я хочу спать а не парсить марки и модели с пробелами - прямо как в твоих познаниях о теории струн"));
         } else {
             Optional<Pair<String, String>> manPair = carManModelMap.keySet().stream().filter(pair -> pair.getKey().equals(parts[0])).findAny();
             if (!manPair.isPresent()) {
-                toBeSent.add(new SendMessage().setText("Не могу найти марку, попросите товарища капитана пусть в закладках поищет"));
+                actionOutcomeMessages.add(new SendMessage().setText("Не могу найти марку, попросите товарища капитана пусть в закладках поищет"));
             } else {
                 Optional<Pair<String, String>> modelPair = carManModelMap.get(manPair.get()).stream().filter(pair -> pair.getKey().equals(parts[1])).findAny();
                 if (!modelPair.isPresent()) {
-                    toBeSent.add(new SendMessage().setText("Не могу найти модель, хохлушки кончились"));
+                    actionOutcomeMessages.add(new SendMessage().setText("Не могу найти модель, хохлушки кончились"));
                 } else {
-                    boolean isActionSuccessfull = pairAction.apply(ImmutablePair.of(Integer.valueOf(manPair.get().getValue()), Integer.valueOf(modelPair.get().getValue())));
-                    toBeSent.addAll(isActionSuccessfull ? actionSuccessMessages : actionFailedMessages);
+                    boolean isActionSuccessful = pairAction.apply(ImmutablePair.of(Integer.valueOf(manPair.get().getValue()), Integer.valueOf(modelPair.get().getValue())));
+                    actionOutcomeMessages.addAll(isActionSuccessful ? actionSuccessMessages : actionFailedMessages);
                 }
             }
         }
+        return actionOutcomeMessages;
     }
 
     public void checkCarsAndPostNewIfAvailable(Supplier<Result> carsSupplier, String chatId) {
