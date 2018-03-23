@@ -2,12 +2,15 @@ package com.zzz3bra.silviculture;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 
 class CarParserTest {
 
     @Test
     void getOldRattletraps() {
-        System.out.println(CarParser.getOldRattletraps());
+        assertThat(CarParser.getOldRattletraps(), is(notNullValue()));
     }
+
 }
