@@ -22,8 +22,17 @@ addons:
 before_install:
   - java -version
 script:
+  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  - chmod +x ./cc-test-reporter
   - chmod +x ./mvnw
-  - ./mvnw com.heroku.sdk:heroku-maven-plugin:deploy
+  - ./cc-test-reporter before-build
+  - ./mvnw clean verify
+  - TEST_RESULT=$TRAVIS_TEST_RESULT
+  - JACOCO_SOURCE_PATH=src/main/java ./cc-test-reporter format-coverage target/site/jacoco/jacoco.xml --input-type jacoco
+  - ./cc-test-reporter upload-coverage
+  - (exit $TEST_RESULT)
+after_success:
+  - ./mvnw -Dmaven.test.skip=true com.heroku.sdk:heroku-maven-plugin:deploy
 notifications:
   webhooks:
     on_success: change
