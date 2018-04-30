@@ -1,4 +1,4 @@
-package com.zzz3bra.silviculture.domain;
+package com.zzz3bra.silviculture.data.gathering.onliner;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
