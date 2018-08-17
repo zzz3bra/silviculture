@@ -1,7 +1,7 @@
 package com.zzz3bra.silviculture;
 
 import org.telegram.telegrambots.ApiContextInitializer;
-import org.telegram.telegrambots.TelegramBotsApi;
+import org.telegram.telegrambots.meta.TelegramBotsApi;
 
 import java.util.Arrays;
 import java.util.List;
