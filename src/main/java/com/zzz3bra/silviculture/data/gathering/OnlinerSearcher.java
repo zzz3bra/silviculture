@@ -105,7 +105,7 @@ class OnlinerSearcher implements Searcher {
         Map<String, String> parametersMap = new HashMap<>(defaultParameters);
 
         Optional<Pair<String, String>> manufacturerId = ofNullable(search.getManufacturer()).map(manufacturer -> ids.keySet().stream().filter(pair -> pair.getKey().equalsIgnoreCase(manufacturer)).findFirst().orElse(null));
-        manufacturerId.ifPresent(manufacturer -> parametersMap.put("car[0][" + manufacturer.getValue() + "]", ofNullable(search.getModelName()).map(model -> ids.get(manufacturerId.get()).stream().filter(pair -> pair.getKey().equalsIgnoreCase(model)).findFirst().map(Pair::getValue).orElse(null)).orElse("")));
+        manufacturerId.ifPresent(manufacturer -> parametersMap.put("car[0][" + manufacturer.getValue() + "][m]", ofNullable(search.getModelName()).map(model -> ids.get(manufacturerId.get()).stream().filter(pair -> pair.getKey().equalsIgnoreCase(model)).findFirst().map(Pair::getValue).orElse(null)).orElse("")));
         ofNullable(search.getMaxYear()).ifPresent(maxYear -> parametersMap.put("max-year", maxYear.toString()));
         ofNullable(search.getMinYear()).ifPresent(minYear -> parametersMap.put("min-year", minYear.toString()));
 
