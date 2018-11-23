@@ -3,6 +3,8 @@ package com.zzz3bra.silviculture;
 import com.zzz3bra.silviculture.data.Ad;
 import com.zzz3bra.silviculture.data.gathering.Search;
 import com.zzz3bra.silviculture.data.gathering.Searcher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -25,6 +27,7 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
 public class SilvicultureBot extends TelegramLongPollingBot {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SilvicultureBot.class);
 
     private static final String ADD = "/add ";
     private static final String REMOVE = "/remove ";
@@ -77,7 +80,8 @@ public class SilvicultureBot extends TelegramLongPollingBot {
             try {
                 execute(sendMessage.setChatId(message.getChatId()));
             } catch (TelegramApiException e) {
-                e.printStackTrace();
+                LOGGER.error("message sending failed", e);
+                LOGGER.error("message [{}], update [{}]", message, update);
             }
         });
     }
@@ -125,7 +129,7 @@ public class SilvicultureBot extends TelegramLongPollingBot {
                             try {
                                 execute(sendMessage);
                             } catch (Exception e) {
-                                e.printStackTrace();
+                                LOGGER.error("post new cars failed", e);
                             }
                         });
                     }

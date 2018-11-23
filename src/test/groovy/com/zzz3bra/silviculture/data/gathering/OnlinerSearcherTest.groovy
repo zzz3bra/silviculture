@@ -5,6 +5,7 @@ import groovy.sql.Sql
 import spock.lang.IgnoreIf
 import spock.lang.Shared
 import spock.lang.Specification
+import spock.lang.Unroll
 
 import javax.sql.DataSource
 import java.sql.Connection
@@ -47,7 +48,7 @@ class OnlinerSearcherTest extends Specification {
         when:
         sql.execute("CREATE TABLE users (ID int, NAME TEXT NOT NULL,PRIMARY KEY(ID)); INSERT INTO users VALUES(1,'username');")
         then:
-        sql.rows("SELECT * FROM users WHERE ID = 1;").each { it.name == "username" }
+        sql.rows("SELECT * FROM users WHERE ID = 1;").every { it.name == "username" }
     }
 
     def "SQL could be executed twice"() {
@@ -56,18 +57,32 @@ class OnlinerSearcherTest extends Specification {
         when:
         sql.execute("CREATE TABLE users (ID int, NAME TEXT NOT NULL,PRIMARY KEY(ID)); INSERT INTO users VALUES(1,'username');")
         then:
-        sql.rows("SELECT * FROM users WHERE ID = 1;").each { it.name == "username" }
+        sql.rows("SELECT * FROM users WHERE ID = 1;").every { it.name == "username" }
     }
 
-    def "Should be abel to parse ONLINER IDs"() {
+    @Unroll
+    def "Should be able to parse ONLINER IDs and get #manufacturer #model"() {
+        given:
+        def models = onlinerSearcher.supportedManufacturersAndModels()
+        assert models.size() == 147
+
         expect:
-        onlinerSearcher.supportedManufacturersAndModels().size() == 147
+        models.get(manufacturer).contains(model)
+
+        where:
+        manufacturer | model
+        "honda"      | "civic"
+        "bmw"        | "740"
+        "toyota"     | "supra"
     }
 
     @IgnoreIf({ !OnlinerSearcherTest.isUrlAvailable(ONLINER_URL) })
     def "Should search for rocking silvias of course why else we bother writing all this code, Stas"() {
         expect:
-        onlinerSearcher.find(Search.builder().manufacturer("Nissan").modelName("Silvia").build()) != null
+        onlinerSearcher.find(Search.builder().manufacturer(manufacturer).modelName(model).build()) != null
+        where:
+        manufacturer | model
+        "Nissan"     | "Silvia"
     }
 
     @IgnoreIf({ !OnlinerSearcherTest.isUrlAvailable(ONLINER_URL) })
