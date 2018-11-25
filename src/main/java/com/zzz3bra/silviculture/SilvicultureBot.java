@@ -83,7 +83,7 @@ public class SilvicultureBot extends TelegramLongPollingBot {
             toBeSent.add(new SendMessage().setText("Отслеживаемые автомобили: \n" + cars));
         }
 
-        toBeSent = doAddOrRemoveActionIfSupported(message.getText(), customer.getSearches());
+        toBeSent.addAll(doAddOrRemoveActionIfSupported(message.getText(), customer.getSearches()));
         toBeSent.forEach(sendMessage -> {
             try {
                 execute(sendMessage.setChatId(message.getChatId()));
