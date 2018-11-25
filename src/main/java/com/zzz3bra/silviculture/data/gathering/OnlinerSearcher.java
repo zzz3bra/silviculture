@@ -119,7 +119,7 @@ class OnlinerSearcher implements Searcher {
             Advertisement ad = entry.getValue();
             com.zzz3bra.silviculture.data.gathering.onliner.Car adCar = ad.getCar();
             Car car = new Car(adCar.getModel().getManufacturerName(), adCar.getModel().getName(), adCar.getYear(), adCar.getOdometerState(), adCar.getCostInUsd());
-            return new Ad(entry.getKey(), ad.getTitle(), car, Stream.of(ad.getPhotos()).map(photo -> URI.create(photo.getImages().getOriginal())).collect(toList()));
+            return new Ad(entry.getKey(), ad.getTitle(), car, Stream.of(ad.getPhotos()).map(photo -> URI.create(photo.getImages().getOriginal())).collect(toList()), URI.create("https://ab.onliner.by/car/" + entry.getKey()));
         }).collect(toList());
     }
 

@@ -14,12 +14,14 @@ public class Ad {
     public final String title;
     public final Car car;
     public final List<URI> carPhotos;
+    public final URI link;
 
-    public Ad(String id, String title, Car car, List<URI> carPhotos) {
+    public Ad(String id, String title, Car car, List<URI> carPhotos, URI link) {
         this.id = id;
         this.title = title;
         this.car = car;
         this.carPhotos = unmodifiableList(carPhotos);
+        this.link = link;
     }
 
     @Override

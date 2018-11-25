@@ -169,7 +169,8 @@ public class SilvicultureBot extends TelegramLongPollingBot {
     private String createMessage(Ad ad) {
         return "Опа, " + ad.title + "\n" +
                 "и пробег всего лишь " + ad.car.mileageInKilometers + " км" + "\n" +
-                "Какая цаца... и всего за " + ad.car.costInUsd + "$" + "\n";
+                "Какая цаца... и всего за " + ad.car.costInUsd + "$" + "\n" +
+                "Подробности тута : " + ad.link.toString() + "\n";
     }
 
     @Override
