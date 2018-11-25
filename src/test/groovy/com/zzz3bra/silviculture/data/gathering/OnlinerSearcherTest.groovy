@@ -142,7 +142,16 @@ class OnlinerSearcherTest extends Specification {
         customer.update();
 
         then:
-        Customer.find.byId(1L).getViewedAdsIdsBySearcher().get(onlinerSearcher.getTechnicalName()).size() == 3
+        Customer.find.byId(1L).viewedAdsIdsBySearcher.get(onlinerSearcher.getTechnicalName()).size() == 3
+
+        when:
+        customer = Customer.find.byId(1L);
+        customer.viewedAdsIdsBySearcher.get(onlinerSearcher.getTechnicalName()).add("4");
+        customer.setViewedAdsIdsBySearcher(new HashMap<>(customer.viewedAdsIdsBySearcher));
+        customer.update();
+
+        then:
+        Customer.find.byId(1L).getViewedAdsIdsBySearcher().get(onlinerSearcher.getTechnicalName()).size() == 4
 
         when:
         Customer.find.byId(1L).delete();

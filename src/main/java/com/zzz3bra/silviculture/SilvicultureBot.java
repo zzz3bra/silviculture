@@ -94,11 +94,12 @@ public class SilvicultureBot extends TelegramLongPollingBot {
             }
         });
         if (!errorOccurred.get()) {
+            customer.setViewedAdsIdsBySearcher(new HashMap<>(customer.getViewedAdsIdsBySearcher()));
             customer.update();
         }
     }
 
-    List<SendMessage> doAddOrRemoveActionIfSupported(String action,Customer customer) {
+    List<SendMessage> doAddOrRemoveActionIfSupported(String action, Customer customer) {
         String[] carSearchParts;
         Function<Search, Boolean> searchAction;
         List<SendMessage> actionSuccessMessages = new ArrayList<>();
@@ -162,6 +163,7 @@ public class SilvicultureBot extends TelegramLongPollingBot {
                 );
             });
             if (!errorOccurred.get()) {
+                customer.setViewedAdsIdsBySearcher(new HashMap<>(customer.getViewedAdsIdsBySearcher()));
                 customer.update();
             }
         });
