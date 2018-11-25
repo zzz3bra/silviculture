@@ -4,7 +4,6 @@ import com.zzz3bra.silviculture.data.Ad;
 import com.zzz3bra.silviculture.data.Customer;
 import com.zzz3bra.silviculture.data.gathering.Search;
 import com.zzz3bra.silviculture.data.gathering.Searcher;
-import io.ebean.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -47,7 +46,6 @@ public class SilvicultureBot extends TelegramLongPollingBot {
     }
 
     @Override
-    @Transactional
     public void onUpdateReceived(Update update) {
         final Long chatId = update.getMessage().getChatId();
         Customer customer = Customer.find.byId(chatId);
@@ -88,6 +86,8 @@ public class SilvicultureBot extends TelegramLongPollingBot {
         }
 
         toBeSent = doAddOrRemoveActionIfSupported(message.getText(), searches);
+
+        customer.update();
 
         toBeSent.forEach(sendMessage -> {
             try {
@@ -136,7 +136,7 @@ public class SilvicultureBot extends TelegramLongPollingBot {
     }
 
     public void checkCarsAndPostNewIfAvailable() {
-        Customer.find.all().forEach(customer -> {
+        Customer.find.query().setId(1L).fetch("searches").findList().forEach(customer -> {
             searchers.forEach(searcher -> customer.getSearches().stream().map(searcher::find).flatMap(List::stream).forEach(ad -> {
                         if (currentSessionAds.get(searcher).add(ad)) {
                             prepareStraightForwardMessages(ad, customer.getId()).forEach(sendMessage -> {
