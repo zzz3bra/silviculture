@@ -83,7 +83,7 @@ public class SilvicultureBot extends TelegramLongPollingBot {
             toBeSent.add(new SendMessage().setText("Отслеживаемые автомобили: \n" + cars));
         }
 
-        toBeSent.addAll(doAddOrRemoveActionIfSupported(message.getText(), customer.getSearches()));
+        toBeSent.addAll(doAddOrRemoveActionIfSupported(message.getText(), customer));
         toBeSent.forEach(sendMessage -> {
             try {
                 execute(sendMessage.setChatId(message.getChatId()));
@@ -98,20 +98,28 @@ public class SilvicultureBot extends TelegramLongPollingBot {
         }
     }
 
-    List<SendMessage> doAddOrRemoveActionIfSupported(String action, List<Search> searches) {
+    List<SendMessage> doAddOrRemoveActionIfSupported(String action,Customer customer) {
         String[] carSearchParts;
         Function<Search, Boolean> searchAction;
         List<SendMessage> actionSuccessMessages = new ArrayList<>();
         List<SendMessage> actionFailedMessages = new ArrayList<>();
         if (action.startsWith(ADD)) {
             carSearchParts = action.substring(ADD.length()).toLowerCase().split(" ");
-            searchAction = searches::add;
+            searchAction = search -> {
+                customer.getSearches().add(search);
+                searchers.forEach(searcher -> {
+                    customer.getViewedAdsIdsBySearcher().computeIfAbsent(searcher.getTechnicalName(), l -> new HashSet<>());
+                    List<String> initialAdsIds = searcher.find(search).stream().map(ad -> ad.id).collect(toList());
+                    customer.getViewedAdsIdsBySearcher().get(searcher.getTechnicalName()).addAll(initialAdsIds);
+                });
+                return true;
+            };
             actionSuccessMessages.add(new SendMessage().setText("Слежу (за лупой) ..."));
             actionSuccessMessages.add(new SendMessage().setText("https://avatanplus.com/files/resources/mid/5a105f460a1a615fcff42999.png"));
             actionFailedMessages.add(new SendMessage().setText("Данный автомобиль уже отслеживается"));
         } else if (action.startsWith(REMOVE)) {
             carSearchParts = action.substring(REMOVE.length()).toLowerCase().split(" ");
-            searchAction = searches::remove;
+            searchAction = customer.getSearches()::remove;
             actionSuccessMessages.add(new SendMessage().setText("Поиск удален"));
             actionFailedMessages.add(new SendMessage().setText("Данный автомобиль не отслеживается"));
         } else {
