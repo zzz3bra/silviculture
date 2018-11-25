@@ -1,7 +1,10 @@
 package com.zzz3bra.silviculture.data.gathering
 
 import com.opentable.db.postgres.embedded.EmbeddedPostgres
+import com.zzz3bra.silviculture.data.Customer
 import groovy.sql.Sql
+import io.ebean.Ebean
+import io.ebean.EbeanServer
 import spock.lang.IgnoreIf
 import spock.lang.Shared
 import spock.lang.Specification
@@ -19,8 +22,10 @@ class OnlinerSearcherTest extends Specification {
 
     private static OnlinerSearcher onlinerSearcher = new OnlinerSearcher(MANUFACTURERS, MANUFACTURERS_MODELS)
     @Shared
-    private static DataSource postgresDatabase = EmbeddedPostgres.builder().start().postgresDatabase
+    private static DataSource postgresDatabase = EmbeddedPostgres.builder().setPort(5432).start().postgresDatabase
     private Connection connection = postgresDatabase.connection
+    @Shared
+    private static EbeanServer server = Ebean.getDefaultServer()
 
     static boolean isUrlAvailable(String url) {
         new URL(url).openConnection().connect()
@@ -107,4 +112,21 @@ class OnlinerSearcherTest extends Specification {
         onlinerSearcher.find(Search.builder().manufacturer("стасян").modelName("civic").build()).size() == DEFAULT_PAGE_SIZE
     }
 
+    def "first ebean test"() {
+        given:
+        Customer customer = new Customer();
+        customer.setName("Hello world");
+
+        // insert the customer in the DB
+        server.save(customer);
+
+        expect:
+        // Find by Id
+        Customer foundHello = server.find(Customer.class, 1);
+
+        System.out.println("hello " + foundHello.getName());
+
+        // delete the customer
+        server.delete(customer);
+    }
 }

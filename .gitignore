@@ -139,3 +139,6 @@ Desktop.ini
 # ESLint
 ######################
 .eslintcache
+
+db-create-all.sql
+db-drop-all.sql
