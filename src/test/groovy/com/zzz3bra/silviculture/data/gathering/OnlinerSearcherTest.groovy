@@ -112,21 +112,34 @@ class OnlinerSearcherTest extends Specification {
         onlinerSearcher.find(Search.builder().manufacturer("стасян").modelName("civic").build()).size() == DEFAULT_PAGE_SIZE
     }
 
-    def "first ebean test"() {
+    def "na ebean test"() {
         given:
         Customer customer = new Customer();
-        customer.setName("Hello world");
-
-        // insert the customer in the DB
-        server.save(customer);
+        customer.name = "Hello world";
+        customer.searches = [Search.builder().manufacturer("Honda").minYear(2010).build()];
+        customer.save();
 
         expect:
-        // Find by Id
-        Customer foundHello = server.find(Customer.class, 1);
+        Customer foundHello = Customer.find.byId(1L);
+        foundHello.searches.every { it.manufacturer == "Honda"};
 
-        System.out.println("hello " + foundHello.getName());
+        when:
+        foundHello.searches.add(Search.builder().manufacturer("Nissan").minYear(2010).build());
+        foundHello.update();
 
-        // delete the customer
-        server.delete(customer);
+        then:
+        Customer.find.query().setId(1L).fetch("searches").findOne().searches.each {
+            verifyAll(it) {
+                it.manufacturer in ["Honda", "Nissan"];
+                it.minYear == 2010
+            }
+        };
+
+        when:
+        Customer.find.byId(1L).delete();
+
+        then:
+        Customer.find.all().isEmpty()
+
     }
 }

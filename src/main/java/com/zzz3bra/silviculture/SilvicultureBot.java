@@ -1,8 +1,10 @@
 package com.zzz3bra.silviculture;
 
 import com.zzz3bra.silviculture.data.Ad;
+import com.zzz3bra.silviculture.data.Customer;
 import com.zzz3bra.silviculture.data.gathering.Search;
 import com.zzz3bra.silviculture.data.gathering.Searcher;
+import io.ebean.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -35,7 +37,6 @@ public class SilvicultureBot extends TelegramLongPollingBot {
     private static final String RESET = "/reset";
     private static final String STATUS = "/status";
 
-    private final Set<Search> searches = new HashSet<>();
     private final Map<Searcher, Set<Ad>> currentSessionAds = new HashMap<>();
     private final List<Searcher> searchers;
 
@@ -46,7 +47,19 @@ public class SilvicultureBot extends TelegramLongPollingBot {
     }
 
     @Override
+    @Transactional
     public void onUpdateReceived(Update update) {
+        final Long chatId = update.getMessage().getChatId();
+        Customer customer = Customer.find.byId(chatId);
+        if (customer == null) {
+            customer = new Customer();
+            customer.setId(chatId);
+            customer.setName("аноним");
+            customer.setSearches(new ArrayList<>());
+            customer.save();
+        }
+        final List<Search> searches = customer.getSearches();
+
         Message message;
         List<SendMessage> toBeSent = new ArrayList<>();
 
@@ -74,7 +87,7 @@ public class SilvicultureBot extends TelegramLongPollingBot {
             toBeSent.add(new SendMessage().setText("Отслеживаемые автомобили: \n" + cars));
         }
 
-        toBeSent = doAddOrRemoveActionIfSupported(message.getText());
+        toBeSent = doAddOrRemoveActionIfSupported(message.getText(), searches);
 
         toBeSent.forEach(sendMessage -> {
             try {
@@ -86,7 +99,7 @@ public class SilvicultureBot extends TelegramLongPollingBot {
         });
     }
 
-    List<SendMessage> doAddOrRemoveActionIfSupported(String action) {
+    List<SendMessage> doAddOrRemoveActionIfSupported(String action, List<Search> searches) {
         String[] carSearchParts;
         Function<Search, Boolean> searchAction;
         List<SendMessage> actionSuccessMessages = new ArrayList<>();
@@ -122,22 +135,24 @@ public class SilvicultureBot extends TelegramLongPollingBot {
         }).collect(toList());
     }
 
-    public void checkCarsAndPostNewIfAvailable(String chatId) {
-        searchers.forEach(searcher -> searches.stream().map(searcher::find).flatMap(List::stream).forEach(ad -> {
-                    if (currentSessionAds.get(searcher).add(ad)) {
-                        prepareStraightForwardMessages(ad, chatId).forEach(sendMessage -> {
-                            try {
-                                execute(sendMessage);
-                            } catch (Exception e) {
-                                LOGGER.error("post new cars failed", e);
-                            }
-                        });
+    public void checkCarsAndPostNewIfAvailable() {
+        Customer.find.all().forEach(customer -> {
+            searchers.forEach(searcher -> customer.getSearches().stream().map(searcher::find).flatMap(List::stream).forEach(ad -> {
+                        if (currentSessionAds.get(searcher).add(ad)) {
+                            prepareStraightForwardMessages(ad, customer.getId()).forEach(sendMessage -> {
+                                try {
+                                    execute(sendMessage);
+                                } catch (Exception e) {
+                                    LOGGER.error("search and send new cars into chat failed", e);
+                                }
+                            });
+                        }
                     }
-                }
-        ));
+            ));
+        });
     }
 
-    private List<SendMessage> prepareStraightForwardMessages(Ad ad, String chatId) {
+    private List<SendMessage> prepareStraightForwardMessages(Ad ad, Long chatId) {
         List<SendMessage> messages = ad.carPhotos.stream().map(photo -> new SendMessage().setChatId(chatId).setText(photo.toString())).collect(toList());
         messages.add(0, new SendMessage().setChatId(chatId).setText(createMessage(ad)));
         messages.add(new SendMessage().setChatId(chatId).setText("Каеф..."));
