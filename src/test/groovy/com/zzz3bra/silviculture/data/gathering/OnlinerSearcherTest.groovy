@@ -117,6 +117,7 @@ class OnlinerSearcherTest extends Specification {
         Customer customer = new Customer();
         customer.name = "Hello world";
         customer.searches = [Search.builder().manufacturer("Honda").minYear(2010).build()];
+        customer.viewedAdsIdsBySearcher = new HashMap<>();
         customer.save();
 
         expect:
@@ -126,14 +127,22 @@ class OnlinerSearcherTest extends Specification {
         when:
         foundHello.searches.add(Search.builder().manufacturer("Nissan").minYear(2010).build());
         foundHello.update();
+        customer = Customer.find.byId(1L);
 
         then:
-        Customer.find.query().setId(1L).fetch("searches").findOne().searches.each {
+        customer.searches.each {
             verifyAll(it) {
                 it.manufacturer in ["Honda", "Nissan"];
                 it.minYear == 2010
             }
         };
+
+        when:
+        customer.viewedAdsIdsBySearcher.put(onlinerSearcher.getTechnicalName(), ["1", "2", "3"].toSet());
+        customer.update();
+
+        then:
+        Customer.find.byId(1L).getViewedAdsIdsBySearcher().get(onlinerSearcher.getTechnicalName()).size() == 3
 
         when:
         Customer.find.byId(1L).delete();

@@ -17,8 +17,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -36,17 +35,16 @@ public class SilvicultureBot extends TelegramLongPollingBot {
     private static final String RESET = "/reset";
     private static final String STATUS = "/status";
 
-    private final Map<Searcher, Set<Ad>> currentSessionAds = new HashMap<>();
     private final List<Searcher> searchers;
 
     SilvicultureBot(Searcher... searchers) {
         super();
         this.searchers = Arrays.asList(searchers);
-        this.searchers.forEach(searcher -> currentSessionAds.put(searcher, new HashSet<>()));
     }
 
     @Override
     public void onUpdateReceived(Update update) {
+        AtomicBoolean errorOccurred = new AtomicBoolean(false);
         final Long chatId = update.getMessage().getChatId();
         Customer customer = Customer.find.byId(chatId);
         if (customer == null) {
@@ -54,9 +52,9 @@ public class SilvicultureBot extends TelegramLongPollingBot {
             customer.setId(chatId);
             customer.setName("аноним");
             customer.setSearches(new ArrayList<>());
+            customer.setViewedAdsIdsBySearcher(new HashMap<>());
             customer.save();
         }
-        final List<Search> searches = customer.getSearches();
 
         Message message;
         List<SendMessage> toBeSent = new ArrayList<>();
@@ -70,33 +68,34 @@ public class SilvicultureBot extends TelegramLongPollingBot {
         }
 
         if (message.getText().equals(RESET)) {
-            currentSessionAds.clear();
+            customer.getViewedAdsIdsBySearcher().clear();
             toBeSent.add(new SendMessage().setText("Почистил историю уже отправленных машин, тоби пизда, готовься к спаму"));
             toBeSent.add(new SendMessage().setText("https://d2lnr5mha7bycj.cloudfront.net/product-image/file/large_c6ca8b18-ec5b-4e8b-a7c6-35dc403bf214.JPG"));
         }
 
         if (message.getText().equals(CLEAR)) {
-            searches.clear();
+            customer.getSearches().clear();
             toBeSent.add(new SendMessage().setText("Запрашиваемые модели очищены, буду теперь молчать в трубочку..."));
         }
 
         if (message.getText().equals(STATUS)) {
-            String cars = searches.stream().map(search -> String.join(" ", search.getManufacturer(), search.getModelName())).collect(joining("\n"));
+            String cars = customer.getSearches().stream().map(search -> String.join(" ", search.getManufacturer(), search.getModelName())).collect(joining("\n"));
             toBeSent.add(new SendMessage().setText("Отслеживаемые автомобили: \n" + cars));
         }
 
-        toBeSent = doAddOrRemoveActionIfSupported(message.getText(), searches);
-
-        customer.update();
-
+        toBeSent = doAddOrRemoveActionIfSupported(message.getText(), customer.getSearches());
         toBeSent.forEach(sendMessage -> {
             try {
                 execute(sendMessage.setChatId(message.getChatId()));
             } catch (TelegramApiException e) {
+                errorOccurred.set(true);
                 LOGGER.error("message sending failed", e);
                 LOGGER.error("message [{}], update [{}]", message, update);
             }
         });
+        if (!errorOccurred.get()) {
+            customer.update();
+        }
     }
 
     List<SendMessage> doAddOrRemoveActionIfSupported(String action, List<Search> searches) {
@@ -136,19 +135,27 @@ public class SilvicultureBot extends TelegramLongPollingBot {
     }
 
     public void checkCarsAndPostNewIfAvailable() {
-        Customer.find.query().setId(1L).fetch("searches").findList().forEach(customer -> {
-            searchers.forEach(searcher -> customer.getSearches().stream().map(searcher::find).flatMap(List::stream).forEach(ad -> {
-                        if (currentSessionAds.get(searcher).add(ad)) {
-                            prepareStraightForwardMessages(ad, customer.getId()).forEach(sendMessage -> {
-                                try {
-                                    execute(sendMessage);
-                                } catch (Exception e) {
-                                    LOGGER.error("search and send new cars into chat failed", e);
-                                }
-                            });
+        Customer.find.all().forEach(customer -> {
+            AtomicBoolean errorOccurred = new AtomicBoolean(false);
+            searchers.forEach(searcher -> {
+                customer.getViewedAdsIdsBySearcher().computeIfAbsent(searcher.getTechnicalName(), l -> new HashSet<>());
+                customer.getSearches().stream().map(searcher::find).flatMap(List::stream).forEach(ad -> {
+                            if (customer.getViewedAdsIdsBySearcher().get(searcher.getTechnicalName()).add(ad.id)) {
+                                prepareStraightForwardMessages(ad, customer.getId()).forEach(sendMessage -> {
+                                    try {
+                                        execute(sendMessage);
+                                    } catch (Exception e) {
+                                        errorOccurred.set(true);
+                                        LOGGER.error("search and send new cars into chat failed", e);
+                                    }
+                                });
+                            }
                         }
-                    }
-            ));
+                );
+            });
+            if (!errorOccurred.get()) {
+                customer.update();
+            }
         });
     }
 

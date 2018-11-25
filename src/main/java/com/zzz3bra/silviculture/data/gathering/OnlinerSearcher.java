@@ -128,4 +128,8 @@ class OnlinerSearcher implements Searcher {
         return ids.entrySet().stream().collect(toMap(entry -> entry.getKey().getKey(), entry -> entry.getValue().stream().map(Pair::getKey).collect(toList())));
     }
 
+    @Override
+    public String getTechnicalName() {
+        return "ONLINER";
+    }
 }

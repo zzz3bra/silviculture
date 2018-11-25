@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 public interface Searcher {
+    String getTechnicalName();
+
     List<Ad> find(Search search);
 
     Map<String, List<String>> supportedManufacturersAndModels();

@@ -27,6 +27,11 @@ public class AdvertisementFinder {
         }
 
         @Override
+        public String getTechnicalName() {
+            return searcher.getTechnicalName();
+        }
+
+        @Override
         public List<Ad> find(Search search) {
             return searcher.find(search);
         }
