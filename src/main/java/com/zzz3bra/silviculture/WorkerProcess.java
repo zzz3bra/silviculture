@@ -30,6 +30,7 @@ public class WorkerProcess {
         DataSourceConfig postgresDb = new DataSourceConfig();
         postgresDb.setDriver("org.postgresql.Driver");
         postgresDb.setUsername(username);
+        postgresDb.setMaxInactiveTimeSecs(11 * 60);
         postgresDb.setPassword(password);
         postgresDb.setUrl(System.getenv("JDBC_DATABASE_URL"));
 
