@@ -1,6 +1,9 @@
 os:
   - linux
 dist: trusty
+services: postgresql
+addons:
+  postgresql: "10"
 language: java
 install: true
 jdk:
