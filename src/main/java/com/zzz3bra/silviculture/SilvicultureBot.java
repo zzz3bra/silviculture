@@ -3,6 +3,7 @@ package com.zzz3bra.silviculture;
 import com.zzz3bra.silviculture.data.Ad;
 import com.zzz3bra.silviculture.data.Customer;
 import com.zzz3bra.silviculture.data.gathering.Search;
+import com.zzz3bra.silviculture.data.gathering.Search.SearchBuilder;
 import com.zzz3bra.silviculture.data.gathering.Searcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -107,7 +108,7 @@ public class SilvicultureBot extends TelegramLongPollingBot {
         List<SendMessage> actionFailedMessages = new ArrayList<>();
         if (action.startsWith(ADD)) {
             carSearchParts = action.substring(ADD.length()).toLowerCase().split(" ");
-            if (carSearchParts.length > 2) {
+            if (carSearchParts.length != 4 && carSearchParts.length != 2) {
                 return singletonList(new SendMessage().setText("Я хочу спать а не парсить марки и модели с пробелами - прямо как в твоих познаниях о теории струн"));
             }
             Predicate<Search> searchAction = search -> {
@@ -130,7 +131,12 @@ public class SilvicultureBot extends TelegramLongPollingBot {
                 if (!searcher.supportedManufacturersAndModels().get(carSearchParts[0]).contains(carSearchParts[1])) {
                     return Stream.of(new SendMessage().setText("Не могу найти модель, хохлушки кончились"));
                 }
-                boolean isActionSuccessful = searchAction.test(Search.builder().manufacturer(carSearchParts[0]).modelName(carSearchParts[1]).build());
+                SearchBuilder search = Search.builder().manufacturer(carSearchParts[0]).modelName(carSearchParts[1]);
+                if (carSearchParts.length == 4) {
+                    search.minYear(Integer.valueOf(carSearchParts[2]));
+                    search.maxYear(Integer.valueOf(carSearchParts[3]));
+                }
+                boolean isActionSuccessful = searchAction.test(search.build());
                 return isActionSuccessful ? actionSuccessMessages.stream() : actionFailedMessages.stream();
             }).collect(toList());
         } else if (action.startsWith(REMOVE)) {
