@@ -15,9 +15,14 @@ import lombok.ToString;
 @AllArgsConstructor
 @EqualsAndHashCode
 @ToString
-public class Search {
+public class Search implements Printable {
     private Integer minYear;
     private Integer maxYear;
     private String manufacturer;
     private String modelName;
+
+    @Override
+    public String getAsText() {
+        return manufacturer + " " + modelName + " [" + (minYear == null ? "∞" : minYear) + ";" + (maxYear == null ? "∞" : maxYear) + "]";
+    }
 }

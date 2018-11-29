@@ -2,6 +2,7 @@ package com.zzz3bra.silviculture;
 
 import com.zzz3bra.silviculture.data.Ad;
 import com.zzz3bra.silviculture.data.Customer;
+import com.zzz3bra.silviculture.data.gathering.Printable;
 import com.zzz3bra.silviculture.data.gathering.Search;
 import com.zzz3bra.silviculture.data.gathering.Searcher;
 import org.slf4j.Logger;
@@ -79,7 +80,7 @@ public class SilvicultureBot extends TelegramLongPollingBot {
         }
 
         if (message.getText().equals(STATUS)) {
-            String cars = customer.getSearches().stream().map(search -> String.join(" ", search.getManufacturer(), search.getModelName())).collect(joining("\n"));
+            String cars = customer.getSearches().stream().map(Printable::getAsText).collect(joining("\n"));
             toBeSent.add(new SendMessage().setText("Отслеживаемые автомобили: \n" + cars));
         }
 
