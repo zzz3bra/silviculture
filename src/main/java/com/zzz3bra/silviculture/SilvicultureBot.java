@@ -2,7 +2,6 @@ package com.zzz3bra.silviculture;
 
 import com.zzz3bra.silviculture.data.Ad;
 import com.zzz3bra.silviculture.data.Customer;
-import com.zzz3bra.silviculture.data.gathering.Printable;
 import com.zzz3bra.silviculture.data.gathering.Search;
 import com.zzz3bra.silviculture.data.gathering.Searcher;
 import org.slf4j.Logger;
@@ -18,8 +17,11 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static java.util.Collections.emptyList;
@@ -47,16 +49,15 @@ public class SilvicultureBot extends TelegramLongPollingBot {
     public void onUpdateReceived(Update update) {
         AtomicBoolean errorOccurred = new AtomicBoolean(false);
         final Long chatId = update.getMessage().getChatId();
-        Customer customer = Customer.find.byId(chatId);
-        if (customer == null) {
-            customer = new Customer();
-            customer.setId(chatId);
-            customer.setName("аноним");
-            customer.setSearches(new ArrayList<>());
-            customer.setViewedAdsIdsBySearcher(new HashMap<>());
-            customer.save();
-        }
-
+        Customer customer = Optional.ofNullable(Customer.find.byId(chatId)).orElseGet(() -> {
+            Customer c = new Customer();
+            c.setId(chatId);
+            c.setName("аноним");
+            c.setSearches(new ArrayList<>());
+            c.setViewedAdsIdsBySearcher(new HashMap<>());
+            c.save();
+            return c;
+        });
         Message message;
         List<SendMessage> toBeSent = new ArrayList<>();
 
@@ -80,7 +81,7 @@ public class SilvicultureBot extends TelegramLongPollingBot {
         }
 
         if (message.getText().equals(STATUS)) {
-            String cars = customer.getSearches().stream().map(Printable::getAsText).collect(joining("\n"));
+            String cars = IntStream.range(0, customer.getSearches().size()).mapToObj(index -> index + ") " + customer.getSearches().get(index).getAsText()).collect(joining("\n"));
             toBeSent.add(new SendMessage().setText("Отслеживаемые автомобили: \n" + cars));
         }
 
@@ -102,12 +103,14 @@ public class SilvicultureBot extends TelegramLongPollingBot {
 
     List<SendMessage> doAddOrRemoveActionIfSupported(String action, Customer customer) {
         String[] carSearchParts;
-        Function<Search, Boolean> searchAction;
         List<SendMessage> actionSuccessMessages = new ArrayList<>();
         List<SendMessage> actionFailedMessages = new ArrayList<>();
         if (action.startsWith(ADD)) {
             carSearchParts = action.substring(ADD.length()).toLowerCase().split(" ");
-            searchAction = search -> {
+            if (carSearchParts.length > 2) {
+                return singletonList(new SendMessage().setText("Я хочу спать а не парсить марки и модели с пробелами - прямо как в твоих познаниях о теории струн"));
+            }
+            Predicate<Search> searchAction = search -> {
                 customer.getSearches().add(search);
                 searchers.forEach(searcher -> {
                     customer.getViewedAdsIdsBySearcher().computeIfAbsent(searcher.getTechnicalName(), l -> new HashSet<>());
@@ -119,29 +122,30 @@ public class SilvicultureBot extends TelegramLongPollingBot {
             actionSuccessMessages.add(new SendMessage().setText("Слежу (за лупой) ..."));
             actionSuccessMessages.add(new SendMessage().setText("https://avatanplus.com/files/resources/mid/5a105f460a1a615fcff42999.png"));
             actionFailedMessages.add(new SendMessage().setText("Данный автомобиль уже отслеживается"));
+
+            return searchers.stream().flatMap(searcher -> {
+                if (!searcher.supportedManufacturersAndModels().keySet().contains(carSearchParts[0])) {
+                    return Stream.of(new SendMessage().setText("Не могу найти марку, попросите товарища капитана пусть в закладках поищет " + searcher.getClass().getSimpleName()));
+                }
+                if (!searcher.supportedManufacturersAndModels().get(carSearchParts[0]).contains(carSearchParts[1])) {
+                    return Stream.of(new SendMessage().setText("Не могу найти модель, хохлушки кончились"));
+                }
+                boolean isActionSuccessful = searchAction.test(Search.builder().manufacturer(carSearchParts[0]).modelName(carSearchParts[1]).build());
+                return isActionSuccessful ? actionSuccessMessages.stream() : actionFailedMessages.stream();
+            }).collect(toList());
         } else if (action.startsWith(REMOVE)) {
             carSearchParts = action.substring(REMOVE.length()).toLowerCase().split(" ");
-            searchAction = customer.getSearches()::remove;
+            if (carSearchParts.length > 1) {
+                return singletonList(new SendMessage().setText("Укажите номер поиска после команды удаления"));
+            }
+            Supplier<Boolean> searchAction = () -> customer.getSearches().remove(customer.getSearches().get(Integer.parseInt(carSearchParts[0])));
             actionSuccessMessages.add(new SendMessage().setText("Поиск удален"));
             actionFailedMessages.add(new SendMessage().setText("Данный автомобиль не отслеживается"));
+
+            return searchAction.get() ? actionSuccessMessages : actionFailedMessages;
         } else {
             return emptyList();
         }
-
-        if (carSearchParts.length > 2) {
-            return singletonList(new SendMessage().setText("Я хочу спать а не парсить марки и модели с пробелами - прямо как в твоих познаниях о теории струн"));
-        }
-
-        return searchers.stream().flatMap(searcher -> {
-            if (!searcher.supportedManufacturersAndModels().keySet().contains(carSearchParts[0])) {
-                return Stream.of(new SendMessage().setText("Не могу найти марку, попросите товарища капитана пусть в закладках поищет " + searcher.getClass().getSimpleName()));
-            }
-            if (!searcher.supportedManufacturersAndModels().get(carSearchParts[0]).contains(carSearchParts[1])) {
-                return Stream.of(new SendMessage().setText("Не могу найти модель, хохлушки кончились"));
-            }
-            boolean isActionSuccessful = searchAction.apply(Search.builder().manufacturer(carSearchParts[0]).modelName(carSearchParts[1]).build());
-            return isActionSuccessful ? actionSuccessMessages.stream() : actionFailedMessages.stream();
-        }).collect(toList());
     }
 
     public void checkCarsAndPostNewIfAvailable() {
