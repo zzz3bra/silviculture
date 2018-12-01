@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import static com.zzz3bra.silviculture.data.gathering.AdvertisementFinder.AdvertisementSearchers.ONLINER;
@@ -49,13 +50,22 @@ public class WorkerProcess {
         //INITIAL_COMMANDS.forEach(bot::doAddOrRemoveActionIfSupported);
         botsApi.registerBot(bot);
         ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-        executorService.scheduleAtFixedRate(() -> {
+        final ScheduledFuture<?> schedule = executorService.scheduleAtFixedRate(() -> {
             try {
                 bot.checkCarsAndPostNewIfAvailable();
             } catch (Exception exception) {
                 LOGGER.error("check for new cars failed", exception);
             }
         }, 0, 10, TimeUnit.MINUTES);
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> shutdown(bot, schedule)));
+    }
+
+    private static void shutdown(SilvicultureBot bot, ScheduledFuture future) {
+        future.cancel(false);
+        while (true) {
+            if (!bot.isBusy) break;
+        }
+        LOGGER.warn("Graceful shut down");
     }
 
 }
