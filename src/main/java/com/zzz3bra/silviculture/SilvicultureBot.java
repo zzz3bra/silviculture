@@ -112,13 +112,16 @@ public class SilvicultureBot extends TelegramLongPollingBot {
                 return singletonList(new SendMessage().setText("Я хочу спать а не парсить марки и модели с пробелами - прямо как в твоих познаниях о теории струн"));
             }
             Predicate<Search> searchAction = search -> {
-                customer.getSearches().add(search);
-                searchers.forEach(searcher -> {
-                    customer.getViewedAdsIdsBySearcher().computeIfAbsent(searcher.getTechnicalName(), l -> new HashSet<>());
-                    List<String> initialAdsIds = searcher.find(search).stream().map(ad -> ad.id).collect(toList());
-                    customer.getViewedAdsIdsBySearcher().get(searcher.getTechnicalName()).addAll(initialAdsIds);
-                });
-                return true;
+                boolean isNewSearch = !customer.getSearches().contains(search);
+                if (isNewSearch) {
+                    customer.getSearches().add(search);
+                    searchers.forEach(searcher -> {
+                        customer.getViewedAdsIdsBySearcher().computeIfAbsent(searcher.getTechnicalName(), l -> new HashSet<>());
+                        List<String> initialAdsIds = searcher.find(search).stream().map(ad -> ad.id).collect(toList());
+                        customer.getViewedAdsIdsBySearcher().get(searcher.getTechnicalName()).addAll(initialAdsIds);
+                    });
+                }
+                return isNewSearch;
             };
             actionSuccessMessages.add(new SendMessage().setText("Слежу (за лупой) ..."));
             actionSuccessMessages.add(new SendMessage().setText("https://avatanplus.com/files/resources/mid/5a105f460a1a615fcff42999.png"));
