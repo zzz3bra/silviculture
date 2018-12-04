@@ -51,8 +51,18 @@ public class SilvicultureBot extends TelegramLongPollingBot {
     @Override
     public void onUpdateReceived(Update update) {
         isBusy = true;
+        Message message;
+        if (update.hasChannelPost()) {
+            message = update.getChannelPost();
+        } else if (update.hasMessage()) {
+            message = update.getMessage();
+        } else {
+            isBusy = false;
+            return;
+        }
+
         AtomicBoolean errorOccurred = new AtomicBoolean(false);
-        final Long chatId = update.getMessage().getChatId();
+        final Long chatId = message.getChatId();
         Customer customer = Optional.ofNullable(Customer.find.byId(chatId)).orElseGet(() -> {
             Customer c = new Customer();
             c.setId(chatId);
@@ -62,17 +72,8 @@ public class SilvicultureBot extends TelegramLongPollingBot {
             c.save();
             return c;
         });
-        Message message;
-        List<SendMessage> toBeSent = new ArrayList<>();
 
-        if (update.hasChannelPost()) {
-            message = update.getChannelPost();
-        } else if (update.hasMessage()) {
-            message = update.getMessage();
-        } else {
-            isBusy = false;
-            return;
-        }
+        List<SendMessage> toBeSent = new ArrayList<>();
 
         if (message.getText().equals(RESET)) {
             customer.getViewedAdsIdsBySearcher().clear();
