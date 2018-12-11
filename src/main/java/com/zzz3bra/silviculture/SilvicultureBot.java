@@ -5,6 +5,7 @@ import com.zzz3bra.silviculture.data.Customer;
 import com.zzz3bra.silviculture.data.gathering.Search;
 import com.zzz3bra.silviculture.data.gathering.Search.SearchBuilder;
 import com.zzz3bra.silviculture.data.gathering.Searcher;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -66,7 +67,7 @@ public class SilvicultureBot extends TelegramLongPollingBot {
         Customer customer = Optional.ofNullable(Customer.find.byId(chatId)).orElseGet(() -> {
             Customer c = new Customer();
             c.setId(chatId);
-            c.setName("аноним");
+            c.setName(message.getContact().getVCard());
             c.setSearches(new ArrayList<>());
             c.setViewedAdsIdsBySearcher(new HashMap<>());
             c.save();
@@ -113,9 +114,14 @@ public class SilvicultureBot extends TelegramLongPollingBot {
         List<SendMessage> actionSuccessMessages = new ArrayList<>();
         List<SendMessage> actionFailedMessages = new ArrayList<>();
         if (action.startsWith(ADD)) {
-            carSearchParts = action.substring(ADD.length()).toLowerCase().split(" ");
+            final String searchAttributes = action.substring(ADD.length()).toLowerCase();
+            if (searchAttributes.contains("\"")) {
+                carSearchParts = Stream.of(searchAttributes.split("\"")).filter(StringUtils::isNotBlank).toArray(String[]::new);
+            } else {
+                carSearchParts = searchAttributes.split(" ");
+            }
             if (carSearchParts.length != 4 && carSearchParts.length != 2) {
-                return singletonList(new SendMessage().setText("Я хочу спать а не парсить марки и модели с пробелами - прямо как в твоих познаниях о теории струн"));
+                return singletonList(new SendMessage().setText("Шоб искать марки и машины с пробелами пиши всё в двойных кавычках, типа \"great wall\" \"voleex c30\" \"2012\" \"2022\""));
             }
             Predicate<Search> searchAction = search -> {
                 boolean isNewSearch = !customer.getSearches().contains(search);

@@ -6,7 +6,7 @@
 
     <groupId>com.zzz3bra.silviculture</groupId>
     <artifactId>silviculture</artifactId>
-    <version>0.2.0</version>
+    <version>0.3.0</version>
 
     <prerequisites>
         <maven>3.3.9</maven>
@@ -117,7 +117,7 @@
         <dependency>
             <groupId>com.opentable.components</groupId>
             <artifactId>otj-pg-embedded</artifactId>
-            <version>0.12.5</version>
+            <version>0.12.6</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
