@@ -69,7 +69,7 @@ class OnlinerSearcherTest extends Specification {
     def "Should be able to parse ONLINER IDs and get #manufacturer #model"() {
         given:
         def models = onlinerSearcher.supportedManufacturersAndModels()
-        assert models.size() == 147
+        assert models.size() == 156
 
         expect:
         models.get(manufacturer).contains(model)
@@ -79,6 +79,7 @@ class OnlinerSearcherTest extends Specification {
         "honda"      | "civic"
         "bmw"        | "740"
         "toyota"     | "supra"
+        "rover"      | "streetwise"
     }
 
     @IgnoreIf({ !OnlinerSearcherTest.isUrlAvailable(ONLINER_URL) })

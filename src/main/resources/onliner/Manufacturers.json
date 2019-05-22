@@ -8,6 +8,10 @@
     "name": "Adler"
   },
   {
+    "id": 197,
+    "name": "Adria"
+  },
+  {
     "id": 3,
     "name": "Alfa Romeo"
   },
@@ -245,7 +249,7 @@
   },
   {
     "id": 27,
-    "name": "Iran Khordo"
+    "name": "Iran Khodro"
   },
   {
     "id": 28,
@@ -308,6 +312,14 @@
     "name": "Lincoln"
   },
   {
+    "id": 194,
+    "name": "Lotus"
+  },
+  {
+    "id": 199,
+    "name": "Mahindra"
+  },
+  {
     "id": 37,
     "name": "Maserati"
   },
@@ -320,12 +332,12 @@
     "name": "Mazda"
   },
   {
-    "id": 40,
-    "name": "MCC Smart"
+    "id": 200,
+    "name": "McLaren"
   },
   {
     "id": 41,
-    "name": "Mercedes"
+    "name": "Mercedes-Benz"
   },
   {
     "id": 42,
@@ -346,6 +358,14 @@
   {
     "id": 44,
     "name": "Mitsubishi"
+  },
+  {
+    "id": 196,
+    "name": "Morris"
+  },
+  {
+    "id": 195,
+    "name": "MPM"
   },
   {
     "id": 118,
@@ -408,6 +428,10 @@
     "name": "Renault"
   },
   {
+    "id": 193,
+    "name": "Roewe"
+  },
+  {
     "id": 108,
     "name": "Rolls-Royce"
   },
@@ -452,12 +476,16 @@
     "name": "Skoda"
   },
   {
+    "id": 40,
+    "name": "Smart"
+  },
+  {
     "id": 109,
     "name": "Spyker"
   },
   {
     "id": 58,
-    "name": "Ssang Yong"
+    "name": "SsangYong"
   },
   {
     "id": 172,
@@ -504,6 +532,10 @@
     "name": "Trabant"
   },
   {
+    "id": 201,
+    "name": "Triumph"
+  },
+  {
     "id": 169,
     "name": "Vauxhall"
   },
@@ -545,7 +577,7 @@
   },
   {
     "id": 65,
-    "name": "\u0412\u0410\u0417"
+    "name": "\u0412\u0410\u0417 (Lada)"
   },
   {
     "id": 66,
@@ -558,6 +590,10 @@
   {
     "id": 67,
     "name": "\u0417\u0410\u0417"
+  },
+  {
+    "id": 198,
+    "name": "\u0417\u0418\u0421"
   },
   {
     "id": 73,
