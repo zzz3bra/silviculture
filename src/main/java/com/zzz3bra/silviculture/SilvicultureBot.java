@@ -144,7 +144,7 @@ public class SilvicultureBot extends TelegramLongPollingBot {
                     return Stream.of(new SendMessage().setText("Не могу найти марку, попросите товарища капитана пусть в закладках поищет " + searcher.getClass().getSimpleName()));
                 }
                 if (!searcher.supportedManufacturersAndModels().get(carSearchParts[0]).contains(carSearchParts[1])) {
-                    return Stream.of(new SendMessage().setText("Не могу найти модель, хохлушки кончились"));
+                    return Stream.of(new SendMessage().setText("Не могу найти модель, хохлушки кончились" + "\r\n" + "Доступные хохлушки: " + searcher.supportedManufacturersAndModels().get(carSearchParts[0])));
                 }
                 SearchBuilder search = Search.builder().manufacturer(carSearchParts[0]).modelName(carSearchParts[1]);
                 if (carSearchParts.length == 4) {
