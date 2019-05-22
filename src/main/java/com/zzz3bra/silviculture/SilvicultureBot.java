@@ -174,7 +174,11 @@ public class SilvicultureBot extends TelegramLongPollingBot {
             AtomicBoolean errorOccurred = new AtomicBoolean(false);
             searchers.forEach(searcher -> {
                 customer.getViewedAdsIdsBySearcher().computeIfAbsent(searcher.getTechnicalName(), l -> new HashSet<>());
-                customer.getSearches().stream().map(searcher::find).flatMap(List::stream).forEach(ad -> {
+                customer.getSearches().stream().map(search -> {
+                    final List<Ad> ads = searcher.find(search);
+                    LOGGER.debug("using search:{} found ads:{} for customer:{}", search, ads, customer);
+                    return ads;
+                }).flatMap(List::stream).forEach(ad -> {
                             if (customer.getViewedAdsIdsBySearcher().get(searcher.getTechnicalName()).add(ad.id)) {
                                 prepareStraightForwardMessages(ad, customer.getId()).forEach(sendMessage -> {
                                     try {
