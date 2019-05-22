@@ -180,6 +180,7 @@ public class SilvicultureBot extends TelegramLongPollingBot {
                     return ads;
                 }).flatMap(List::stream).forEach(ad -> {
                             if (customer.getViewedAdsIdsBySearcher().get(searcher.getTechnicalName()).add(ad.id)) {
+                                LOGGER.debug("new ad with ID {} found for customer:{}", ad.id, customer);
                                 prepareStraightForwardMessages(ad, customer.getId()).forEach(sendMessage -> {
                                     try {
                                         execute(sendMessage);
