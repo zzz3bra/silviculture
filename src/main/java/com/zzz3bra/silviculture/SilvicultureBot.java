@@ -73,6 +73,9 @@ public class SilvicultureBot extends TelegramLongPollingBot {
             c.save();
             return c;
         });
+        if (message.getChat().isUserChat()) {
+            customer.setName(message.getFrom().getUserName());
+        }
 
         List<SendMessage> toBeSent = new ArrayList<>();
 
