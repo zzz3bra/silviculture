@@ -17,7 +17,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>1.8</java.version>
         <jackson.version>2.9.9</jackson.version>
-        <ebean.version>11.38.1</ebean.version>
+        <ebean.version>11.39.1</ebean.version>
         <apache.httpclient.version>4.5.8</apache.httpclient.version>
         <apache.commons-lang3.version>3.9</apache.commons-lang3.version>
         <apache.commons-io.version>2.6</apache.commons-io.version>
