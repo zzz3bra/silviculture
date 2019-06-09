@@ -9,9 +9,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
+import org.telegram.telegrambots.meta.api.methods.PartialBotApiMethod;
+import org.telegram.telegrambots.meta.api.methods.send.SendMediaGroup;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.media.InputMediaPhoto;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.ArrayList;
@@ -184,9 +188,13 @@ public class SilvicultureBot extends TelegramLongPollingBot {
                 }).flatMap(List::stream).forEach(ad -> {
                             if (customer.getViewedAdsIdsBySearcher().get(searcher.getTechnicalName()).add(ad.id)) {
                                 LOGGER.debug("new ad with ID {} found for customer:{}", ad.id, customer);
-                                prepareStraightForwardMessages(ad, customer.getId()).forEach(sendMessage -> {
+                                prepareMessages(ad, customer.getId()).forEach(sendMessage -> {
                                     try {
-                                        execute(sendMessage);
+                                        if (sendMessage instanceof SendMediaGroup) {
+                                            execute((SendMediaGroup) sendMessage);
+                                        } else {
+                                            execute((BotApiMethod<Message>) sendMessage);
+                                        }
                                     } catch (Exception e) {
                                         errorOccurred.set(true);
                                         LOGGER.error("search and send new cars into chat failed", e);
@@ -203,9 +211,12 @@ public class SilvicultureBot extends TelegramLongPollingBot {
         });
     }
 
-    private List<SendMessage> prepareStraightForwardMessages(Ad ad, Long chatId) {
-        List<SendMessage> messages = ad.carPhotos.stream().map(photo -> new SendMessage().setChatId(chatId).setText(photo.toString())).collect(toList());
+    private List<PartialBotApiMethod> prepareMessages(Ad ad, Long chatId) {
+        List<PartialBotApiMethod> messages = new ArrayList<>();
         messages.add(0, new SendMessage().setChatId(chatId).setText(createMessage(ad)));
+        if (ad.carPhotos.size() > 1) {
+            messages.add(new SendMediaGroup(chatId, ad.carPhotos.stream().map(photo -> new InputMediaPhoto(photo.toString(), null)).collect(toList())));
+        }
         messages.add(new SendMessage().setChatId(chatId).setText("Каеф..."));
         return messages;
     }
