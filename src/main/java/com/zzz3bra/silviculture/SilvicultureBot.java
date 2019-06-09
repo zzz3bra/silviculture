@@ -215,7 +215,7 @@ public class SilvicultureBot extends TelegramLongPollingBot {
         List<PartialBotApiMethod> messages = new ArrayList<>();
         messages.add(0, new SendMessage().setChatId(chatId).setText(createMessage(ad)));
         if (ad.carPhotos.size() > 1) {
-            messages.add(new SendMediaGroup(chatId, ad.carPhotos.stream().map(photo -> new InputMediaPhoto(photo.toString(), null)).collect(toList())));
+            messages.add(new SendMediaGroup(chatId, ad.carPhotos.stream().map(photo -> new InputMediaPhoto(photo.toString(), "")).collect(toList())));
         }
         messages.add(new SendMessage().setChatId(chatId).setText("Каеф..."));
         return messages;
