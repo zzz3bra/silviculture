@@ -15,18 +15,22 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMediaGroup;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.media.InputMedia;
 import org.telegram.telegrambots.meta.api.objects.media.InputMediaPhoto;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -43,6 +47,8 @@ public class SilvicultureBot extends TelegramLongPollingBot {
     private static final String CLEAR = "/clear";
     private static final String RESET = "/reset";
     private static final String STATUS = "/status";
+
+    private static final int TELEGRAM_MAX_MEDIAGROUP_SIZE = 10;
 
     private final List<Searcher> searchers;
 
@@ -198,6 +204,7 @@ public class SilvicultureBot extends TelegramLongPollingBot {
                                     } catch (Exception e) {
                                         errorOccurred.set(true);
                                         LOGGER.error("search and send new cars into chat failed", e);
+                                        LOGGER.error("cause: ", e.getCause());
                                     }
                                 });
                             }
@@ -215,7 +222,12 @@ public class SilvicultureBot extends TelegramLongPollingBot {
         List<PartialBotApiMethod> messages = new ArrayList<>();
         messages.add(0, new SendMessage().setChatId(chatId).setText(createMessage(ad)));
         if (ad.carPhotos.size() > 1) {
-            messages.add(new SendMediaGroup(chatId, ad.carPhotos.stream().map(photo -> new InputMediaPhoto(photo.toString(), "")).collect(toList())));
+            final AtomicInteger counter = new AtomicInteger();
+            final List<InputMedia> mediaList = ad.carPhotos.stream().map(photo -> new InputMediaPhoto(photo.toString(), "")).collect(toList());
+            Collection<List<InputMedia>> photosChunks = mediaList.stream()
+                    .collect(Collectors.groupingBy(it -> counter.getAndIncrement() / TELEGRAM_MAX_MEDIAGROUP_SIZE))
+                    .values();
+            photosChunks.forEach(photosChunk -> messages.add(new SendMediaGroup(chatId, photosChunk)));
         }
         messages.add(new SendMessage().setChatId(chatId).setText("Каеф..."));
         return messages;
