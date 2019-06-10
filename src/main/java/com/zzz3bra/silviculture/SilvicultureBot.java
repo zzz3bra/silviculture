@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
@@ -185,8 +186,8 @@ public class SilvicultureBot extends TelegramLongPollingBot {
 
     public void checkCarsAndPostNewIfAvailable() {
         Customer.find.all().forEach(customer -> {
-            AtomicBoolean errorOccurred = new AtomicBoolean(false);
             searchers.forEach(searcher -> {
+                Set<String> failedAds = new HashSet<>();
                 customer.getViewedAdsIdsBySearcher().computeIfAbsent(searcher.getTechnicalName(), l -> new HashSet<>());
                 customer.getSearches().stream().map(search -> {
                     final List<Ad> ads = searcher.find(search);
@@ -203,19 +204,18 @@ public class SilvicultureBot extends TelegramLongPollingBot {
                                             execute((BotApiMethod<Message>) sendMessage);
                                         }
                                     } catch (Exception e) {
-                                        errorOccurred.set(true);
+                                        failedAds.add(ad.id);
                                         LOGGER.error("search and send new cars into chat failed", e);
-                                        LOGGER.error("cause: ", e.getCause());
+                                        LOGGER.error("{}", e.toString());
                                     }
                                 });
                             }
                         }
                 );
+                customer.getViewedAdsIdsBySearcher().get(searcher.getTechnicalName()).removeAll(failedAds);
             });
-            if (!errorOccurred.get()) {
-                customer.setViewedAdsIdsBySearcher(new HashMap<>(customer.getViewedAdsIdsBySearcher()));
-                customer.update();
-            }
+            customer.setViewedAdsIdsBySearcher(new HashMap<>(customer.getViewedAdsIdsBySearcher()));
+            customer.update();
         });
     }
 
