@@ -6,7 +6,7 @@
 
     <groupId>com.zzz3bra.silviculture</groupId>
     <artifactId>silviculture</artifactId>
-    <version>0.5.0</version>
+    <version>0.6.1</version>
 
     <prerequisites>
         <maven>3.3.9</maven>
