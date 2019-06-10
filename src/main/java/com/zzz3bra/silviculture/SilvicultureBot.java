@@ -48,7 +48,8 @@ public class SilvicultureBot extends TelegramLongPollingBot {
     private static final String RESET = "/reset";
     private static final String STATUS = "/status";
 
-    private static final int TELEGRAM_MAX_MEDIAGROUP_SIZE = 10;
+    private static final int TELEGRAM_MIN_MEDIAGROUP_COUNT = 1;
+    private static final int TELEGRAM_MAX_MEDIAGROUP_COUNT = 10;
 
     private final List<Searcher> searchers;
 
@@ -225,9 +226,15 @@ public class SilvicultureBot extends TelegramLongPollingBot {
             final AtomicInteger counter = new AtomicInteger();
             final List<InputMedia> mediaList = ad.carPhotos.stream().map(photo -> new InputMediaPhoto(photo.toString(), "")).collect(toList());
             Collection<List<InputMedia>> photosChunks = mediaList.stream()
-                    .collect(Collectors.groupingBy(it -> counter.getAndIncrement() / TELEGRAM_MAX_MEDIAGROUP_SIZE))
+                    .collect(Collectors.groupingBy(it -> counter.getAndIncrement() / TELEGRAM_MAX_MEDIAGROUP_COUNT))
                     .values();
-            photosChunks.forEach(photosChunk -> messages.add(new SendMediaGroup(chatId, photosChunk)));
+            photosChunks.forEach(photosChunk -> {
+                if (photosChunk.size() == TELEGRAM_MIN_MEDIAGROUP_COUNT) {
+                    messages.add(new SendMessage().setChatId(chatId).setText(photosChunk.get(0).getMedia()));
+                } else {
+                    messages.add(new SendMediaGroup(chatId, photosChunk));
+                }
+            });
         }
         messages.add(new SendMessage().setChatId(chatId).setText("Каеф..."));
         return messages;
