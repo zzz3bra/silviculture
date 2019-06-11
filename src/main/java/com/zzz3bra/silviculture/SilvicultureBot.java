@@ -18,6 +18,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.media.InputMedia;
 import org.telegram.telegrambots.meta.api.objects.media.InputMediaPhoto;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -199,7 +200,20 @@ public class SilvicultureBot extends TelegramLongPollingBot {
                                 prepareMessages(ad, customer.getId()).forEach(sendMessage -> {
                                     try {
                                         if (sendMessage instanceof SendMediaGroup) {
-                                            execute((SendMediaGroup) sendMessage);
+                                            final SendMediaGroup sendMediaGroup = (SendMediaGroup) sendMessage;
+                                            try {
+                                                execute(sendMediaGroup);
+                                            } catch (TelegramApiRequestException e) {
+                                                if ("Bad Request: group send failed".equals(e.getApiResponse())) { // god bless coders who put descriptive description into the error response with code 4xx which means that problem is at the sender's side and something must be changed
+                                                    LOGGER.error("error sending ad [" + ad.id + "] to customer[" + customer.getId() + "]", e.getApiResponse());
+                                                    //try sending photos one-by-one
+                                                    for (InputMedia m : sendMediaGroup.getMedia()) {
+                                                        execute(new SendMessage().setChatId(sendMediaGroup.getChatId()).setText(m.getMedia()));
+                                                    }
+                                                } else {
+                                                    //do nothing
+                                                }
+                                            }
                                         } else {
                                             execute((BotApiMethod<Message>) sendMessage);
                                         }
