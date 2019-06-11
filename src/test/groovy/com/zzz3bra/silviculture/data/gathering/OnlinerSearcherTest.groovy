@@ -28,8 +28,12 @@ class OnlinerSearcherTest extends Specification {
     private static EbeanServer server = Ebean.getDefaultServer()
 
     static boolean isUrlAvailable(String url) {
-        new URL(url).openConnection().connect()
-        return true
+        try {
+            new URL(url).openConnection().connect();
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     def setupSpec() {
