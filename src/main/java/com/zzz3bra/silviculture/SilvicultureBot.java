@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static io.vavr.API.Try;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
@@ -109,15 +110,13 @@ public class SilvicultureBot extends TelegramLongPollingBot {
         }
 
         toBeSent.addAll(doAddOrRemoveActionIfSupported(message.getText(), customer));
-        toBeSent.forEach(sendMessage -> {
-            try {
-                execute(sendMessage.setChatId(message.getChatId()));
-            } catch (TelegramApiException e) {
-                errorOccurred.set(true);
-                LOGGER.error("message sending failed", e);
-                LOGGER.error("message [{}], update [{}]", message, update);
-            }
-        });
+        toBeSent.forEach(sendMessage -> Try(() -> execute(sendMessage.setChatId(message.getChatId())))
+                .recover(TelegramApiException.class, ex -> {
+                    errorOccurred.set(true);
+                    LOGGER.error("message sending failed", ex);
+                    LOGGER.error("message [{}], update [{}]", message, update);
+                    return null;
+                }).getOrNull());
         if (!errorOccurred.get()) {
             customer.setViewedAdsIdsBySearcher(new HashMap<>(customer.getViewedAdsIdsBySearcher()));
             customer.update();
