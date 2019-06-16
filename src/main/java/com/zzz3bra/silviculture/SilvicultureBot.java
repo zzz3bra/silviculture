@@ -185,51 +185,55 @@ public class SilvicultureBot extends TelegramLongPollingBot {
     }
 
     public void checkCarsAndPostNewIfAvailable() {
-        Customer.find.all().forEach(customer -> {
-            searchers.forEach(searcher -> {
-                Set<String> failedAds = new HashSet<>();
-                customer.getViewedAdsIdsBySearcher().computeIfAbsent(searcher.getTechnicalName(), l -> new HashSet<>());
-                customer.getSearches().stream().map(search -> {
-                    final List<Ad> ads = searcher.find(search);
-                    LOGGER.debug("using search:{} found ads:{} for customer:{} {}", search, ads, customer.getId(), customer.getName());
-                    return ads;
-                }).flatMap(List::stream).forEach(ad -> {
-                            if (customer.getViewedAdsIdsBySearcher().get(searcher.getTechnicalName()).add(ad.id)) {
-                                LOGGER.debug("new ad with ID {} found for customer:{} {}", ad.id, customer.getId(), customer.getName());
-                                prepareMessages(ad, customer.getId()).forEach(sendMessage -> {
+        Customer.find.all().forEach(this::checkUpdatesForCustomer);
+    }
+
+    private void checkUpdatesForCustomer(Customer customer) {
+        searchers.forEach(searcher -> checkUpdatesViaSearcher(customer, searcher));
+        customer.setViewedAdsIdsBySearcher(new HashMap<>(customer.getViewedAdsIdsBySearcher()));
+        customer.update();
+    }
+
+    private void checkUpdatesViaSearcher(Customer customer, Searcher searcher) {
+        Set<String> failedAds = new HashSet<>();
+        customer.getViewedAdsIdsBySearcher().computeIfAbsent(searcher.getTechnicalName(), l -> new HashSet<>());
+        customer.getSearches().stream().map(search -> {
+            final List<Ad> ads = searcher.find(search);
+            LOGGER.debug("using search:{} found ads:{} for customer:{} {}", search, ads, customer.getId(), customer.getName());
+            return ads;
+        }).flatMap(List::stream).forEach(ad -> {
+                    if (customer.getViewedAdsIdsBySearcher().get(searcher.getTechnicalName()).add(ad.id)) {
+                        LOGGER.debug("new ad with ID {} found for customer:{} {}", ad.id, customer.getId(), customer.getName());
+                        prepareMessages(ad, customer.getId()).forEach(sendMessage -> {
+                            try {
+                                if (sendMessage instanceof SendMediaGroup) {
+                                    final SendMediaGroup sendMediaGroup = (SendMediaGroup) sendMessage;
                                     try {
-                                        if (sendMessage instanceof SendMediaGroup) {
-                                            final SendMediaGroup sendMediaGroup = (SendMediaGroup) sendMessage;
-                                            try {
-                                                execute(sendMediaGroup);
-                                            } catch (TelegramApiRequestException e) {
-                                                if ("Bad Request: group send failed".equals(e.getApiResponse())) { // god bless coders who put descriptive description into the error response with code 4xx which means that problem is at the sender's side and something must be changed
-                                                    LOGGER.error("error sending ad [" + ad.id + "] to customer[" + customer.getId() + "]", e.getApiResponse());
-                                                    //try sending photos one-by-one
-                                                    for (InputMedia m : sendMediaGroup.getMedia()) {
-                                                        execute(new SendMessage().setChatId(sendMediaGroup.getChatId()).setText(m.getMedia()));
-                                                    }
-                                                } else {
-                                                    //do nothing
-                                                }
+                                        execute(sendMediaGroup);
+                                    } catch (TelegramApiRequestException e) {
+                                        if ("Bad Request: group send failed".equals(e.getApiResponse())) { // god bless coders who put descriptive description into the error response with code 4xx which means that problem is at the sender's side and something must be changed
+                                            LOGGER.error("error sending ad [" + ad.id + "] to customer[" + customer.getId() + "]", e.getApiResponse());
+                                            //try sending photos one-by-one
+                                            for (InputMedia m : sendMediaGroup.getMedia()) {
+                                                execute(new SendMessage().setChatId(sendMediaGroup.getChatId()).setText(m.getMedia()));
                                             }
                                         } else {
-                                            execute((BotApiMethod<Message>) sendMessage);
+                                            //do nothing
                                         }
-                                    } catch (Exception e) {
-                                        failedAds.add(ad.id);
-                                        LOGGER.error("search and send new cars into chat failed", e);
-                                        LOGGER.error("{}", e.toString());
                                     }
-                                });
+                                } else {
+                                    execute((BotApiMethod<Message>) sendMessage);
+                                }
+                            } catch (Exception e) {
+                                failedAds.add(ad.id);
+                                LOGGER.error("search and send new cars into chat failed", e);
+                                LOGGER.error("{}", e.toString());
                             }
-                        }
-                );
-                customer.getViewedAdsIdsBySearcher().get(searcher.getTechnicalName()).removeAll(failedAds);
-            });
-            customer.setViewedAdsIdsBySearcher(new HashMap<>(customer.getViewedAdsIdsBySearcher()));
-            customer.update();
-        });
+                        });
+                    }
+                }
+        );
+        customer.getViewedAdsIdsBySearcher().get(searcher.getTechnicalName()).removeAll(failedAds);
     }
 
     private List<PartialBotApiMethod> prepareMessages(Ad ad, Long chatId) {
