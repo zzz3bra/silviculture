@@ -6,19 +6,16 @@
 
     <groupId>com.zzz3bra.silviculture</groupId>
     <artifactId>silviculture</artifactId>
-    <version>0.6.1</version>
-
-    <prerequisites>
-        <maven>3.3.9</maven>
-    </prerequisites>
+    <version>0.6.2</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>1.8</java.version>
+        <groovy.version>2.5.7</groovy.version>
         <jackson.version>2.9.9</jackson.version>
-        <ebean.version>11.39.1</ebean.version>
-        <apache.httpclient.version>4.5.8</apache.httpclient.version>
+        <ebean.version>11.41.1</ebean.version>
+        <apache.httpclient.version>4.5.9</apache.httpclient.version>
         <apache.commons-lang3.version>3.9</apache.commons-lang3.version>
         <apache.commons-io.version>2.6</apache.commons-io.version>
     </properties>
@@ -55,7 +52,7 @@
             <dependency>
                 <groupId>org.codehaus.groovy</groupId>
                 <artifactId>groovy-all</artifactId>
-                <version>2.5.7</version>
+                <version>${groovy.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -66,7 +63,7 @@
         <dependency>
             <groupId>io.vavr</groupId>
             <artifactId>vavr</artifactId>
-            <version>0.9.3</version>
+            <version>0.10.0</version>
         </dependency>
         <dependency>
             <groupId>io.rest-assured</groupId>
@@ -91,7 +88,7 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.2.5</version>
+            <version>42.2.6</version>
         </dependency>
         <dependency>
             <groupId>org.telegram</groupId>
@@ -187,7 +184,7 @@
             <plugin>
                 <groupId>io.repaint.maven</groupId>
                 <artifactId>tiles-maven-plugin</artifactId>
-                <version>2.14</version>
+                <version>2.15</version>
                 <extensions>true</extensions>
                 <configuration>
                     <tiles>
@@ -247,6 +244,9 @@
                         <configuration>
                             <rules>
                                 <dependencyConvergence/>
+                                <requireMavenVersion>
+                                    <version>3.6</version>
+                                </requireMavenVersion>
                             </rules>
                         </configuration>
                         <goals>
@@ -254,6 +254,14 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>versions-maven-plugin</artifactId>
+                <version>2.7</version>
+                <configuration>
+                    <rulesUri>file:///${project.basedir}/maven-version-rules.xml</rulesUri>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>com.heroku.sdk</groupId>

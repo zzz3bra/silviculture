@@ -8,7 +8,7 @@ import java.util.Objects;
 
 import static java.util.Collections.unmodifiableList;
 
-@ToString
+@ToString(exclude = {"carPhotos","link"})
 public class Ad {
     public final String id;
     public final String title;
