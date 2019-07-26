@@ -4,6 +4,6 @@
     <ignoreVersions>
         <ignoreVersion type="regex">.*-beta.</ignoreVersion>
         <ignoreVersion type="regex">.*_ALPHA</ignoreVersion>
-        <ignoreVersion type="regex">.*[-_\.](alpha|Alpha|ALPHA|b|beta|Beta|BETA|rc|RC|M|EA)[-_\.]?[0-9]*</ignoreVersion>
+        <ignoreVersion type="regex">.*[-_\.](alpha|Alpha|ALPHA|b|beta|Beta|BETA|rc|RC|M|jre[67]|pr[0-9]|EA)[-_\.]?[0-9]*</ignoreVersion>
     </ignoreVersions>
 </ruleset>
