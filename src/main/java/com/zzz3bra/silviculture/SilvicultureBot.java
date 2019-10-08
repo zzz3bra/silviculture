@@ -199,7 +199,7 @@ public class SilvicultureBot extends TelegramLongPollingBot {
         customer.getViewedAdsIdsBySearcher().computeIfAbsent(searcher.getTechnicalName(), l -> new HashSet<>());
         customer.getSearches().stream().map(search -> {
             final List<Ad> ads = searcher.find(search);
-            LOGGER.debug("using search:{} found ads:{} for customer:{} {}", search, ads, customer.getId(), customer.getName());
+            LOGGER.trace("using search:{} found ads:{} for customer:{} {}", search, ads, customer.getId(), customer.getName());
             return ads;
         }).flatMap(List::stream).forEach(ad -> {
                     if (customer.getViewedAdsIdsBySearcher().get(searcher.getTechnicalName()).add(ad.id)) {
