@@ -1,5 +1,7 @@
 package com.zzz3bra.silviculture;
 
+import com.zzz3bra.silviculture.adapter.in.telegram.ChatWithUserBot;
+import com.zzz3bra.silviculture.application.MainService;
 import io.ebean.EbeanServer;
 import io.ebean.EbeanServerFactory;
 import io.ebean.config.ServerConfig;
@@ -17,10 +19,10 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import static com.zzz3bra.silviculture.data.gathering.AdvertisementFinder.AdvertisementSearchers.ONLINER;
+import static com.zzz3bra.silviculture.application.AdvertisementSearchers.ONLINER;
 
-public class WorkerProcess {
-    public static final Logger LOGGER = LoggerFactory.getLogger(WorkerProcess.class);
+public class Launcher {
+    public static final Logger LOGGER = LoggerFactory.getLogger(Launcher.class);
     private static final List<String> INITIAL_COMMANDS = Arrays.asList("/add lexus sc", "/add mazda mx-5", "/add nissan silvia", "/add nissan 300zx", "/add nissan 350z", "/add nissan juke", "/add nissan 100nx", "/add nissan 200sx", "/add nissan 240sx", "/add opel frontera", "/add toyota supra");
     private static final EbeanServer DEFAULT_SERVER;
     static {
@@ -46,7 +48,7 @@ public class WorkerProcess {
     public static void main(String[] args) throws Exception {
         ApiContextInitializer.init();
         TelegramBotsApi botsApi = new TelegramBotsApi();
-        SilvicultureBot bot = new SilvicultureBot(ONLINER);
+        ChatWithUserBot bot = new ChatWithUserBot(new MainService(), ONLINER);
         //INITIAL_COMMANDS.forEach(bot::doAddOrRemoveActionIfSupported);
         botsApi.registerBot(bot);
         ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
@@ -60,7 +62,7 @@ public class WorkerProcess {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> shutdown(bot, schedule)));
     }
 
-    private static void shutdown(SilvicultureBot bot, ScheduledFuture future) {
+    private static void shutdown(ChatWithUserBot bot, ScheduledFuture future) {
         future.cancel(false);
         while (true) {
             if (!bot.isBusy) break;

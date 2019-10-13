@@ -1,10 +1,11 @@
-package com.zzz3bra.silviculture;
+package com.zzz3bra.silviculture.adapter.in.telegram;
 
-import com.zzz3bra.silviculture.data.Ad;
-import com.zzz3bra.silviculture.data.Customer;
-import com.zzz3bra.silviculture.data.gathering.Search;
-import com.zzz3bra.silviculture.data.gathering.Search.SearchBuilder;
-import com.zzz3bra.silviculture.data.gathering.Searcher;
+import com.zzz3bra.silviculture.adapter.out.persistence.JpaCustomerPersistenceAdapter;
+import com.zzz3bra.silviculture.application.MainService;
+import com.zzz3bra.silviculture.application.Searcher;
+import com.zzz3bra.silviculture.domain.Ad;
+import com.zzz3bra.silviculture.domain.Customer;
+import com.zzz3bra.silviculture.domain.Search;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,12 +27,11 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BooleanSupplier;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -42,8 +42,8 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
-public class SilvicultureBot extends TelegramLongPollingBot {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SilvicultureBot.class);
+public class ChatWithUserBot extends TelegramLongPollingBot {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ChatWithUserBot.class);
 
     private static final String ADD = "/add ";
     private static final String REMOVE = "/remove ";
@@ -54,12 +54,17 @@ public class SilvicultureBot extends TelegramLongPollingBot {
     private static final int TELEGRAM_MIN_MEDIAGROUP_COUNT = 1;
     private static final int TELEGRAM_MAX_MEDIAGROUP_COUNT = 10;
 
+    private final JpaCustomerPersistenceAdapter customerPersistenceAdapter;
+    private final MainService mainService;
+
     private final List<Searcher> searchers;
 
     public volatile boolean isBusy = false;
 
-    SilvicultureBot(Searcher... searchers) {
+    public ChatWithUserBot(MainService mainService, Searcher... searchers) {
         super();
+        this.mainService = mainService;
+        customerPersistenceAdapter = new JpaCustomerPersistenceAdapter();
         this.searchers = Arrays.asList(searchers);
     }
 
@@ -78,7 +83,8 @@ public class SilvicultureBot extends TelegramLongPollingBot {
 
         AtomicBoolean errorOccurred = new AtomicBoolean(false);
         final Long chatId = message.getChatId();
-        Customer customer = Optional.ofNullable(Customer.find.byId(chatId)).orElseGet(() -> {
+
+        Customer customer = customerPersistenceAdapter.loadOneCustomersById(chatId).orElseGet(() -> {
             Customer c = new Customer();
             c.setId(chatId);
             c.setName(message.getContact().getVCard());
@@ -94,13 +100,13 @@ public class SilvicultureBot extends TelegramLongPollingBot {
         List<SendMessage> toBeSent = new ArrayList<>();
 
         if (message.getText().equals(RESET)) {
-            customer.getViewedAdsIdsBySearcher().clear();
+            mainService.resetViewedAdsOfCustomer(customer);
             toBeSent.add(new SendMessage().setText("Почистил историю уже отправленных машин, тоби пизда, готовься к спаму"));
             toBeSent.add(new SendMessage().setText("https://d2lnr5mha7bycj.cloudfront.net/product-image/file/large_c6ca8b18-ec5b-4e8b-a7c6-35dc403bf214.JPG"));
         }
 
         if (message.getText().equals(CLEAR)) {
-            customer.getSearches().clear();
+            mainService.removeAllCarSearchesForCustomer(customer);
             toBeSent.add(new SendMessage().setText("Запрашиваемые модели очищены, буду теперь молчать в трубочку..."));
         }
 
@@ -141,7 +147,7 @@ public class SilvicultureBot extends TelegramLongPollingBot {
             Predicate<Search> searchAction = search -> {
                 boolean isNewSearch = !customer.getSearches().contains(search);
                 if (isNewSearch) {
-                    customer.getSearches().add(search);
+                        customer.getSearches().add(search);
                     searchers.forEach(searcher -> {
                         customer.getViewedAdsIdsBySearcher().computeIfAbsent(searcher.getTechnicalName(), l -> new HashSet<>());
                         List<String> initialAdsIds = searcher.find(search).stream().map(ad -> ad.id).collect(toList());
@@ -155,13 +161,13 @@ public class SilvicultureBot extends TelegramLongPollingBot {
             actionFailedMessages.add(new SendMessage().setText("Данный автомобиль уже отслеживается"));
 
             return searchers.stream().flatMap(searcher -> {
-                if (!searcher.supportedManufacturersAndModels().keySet().contains(carSearchParts[0])) {
+                if (!searcher.supportedManufacturersAndModels().containsKey(carSearchParts[0])) {
                     return Stream.of(new SendMessage().setText("Не могу найти марку, попросите товарища капитана пусть в закладках поищет " + searcher.getClass().getSimpleName()));
                 }
                 if (!searcher.supportedManufacturersAndModels().get(carSearchParts[0]).contains(carSearchParts[1])) {
                     return Stream.of(new SendMessage().setText("Не могу найти модель, хохлушки кончились" + "\r\n" + "Доступные хохлушки: " + searcher.supportedManufacturersAndModels().get(carSearchParts[0])));
                 }
-                SearchBuilder search = Search.builder().manufacturer(carSearchParts[0]).modelName(carSearchParts[1]);
+                Search.SearchBuilder search = Search.builder().manufacturer(carSearchParts[0]).modelName(carSearchParts[1]);
                 if (carSearchParts.length == 4) {
                     search.minYear(Integer.valueOf(carSearchParts[2]));
                     search.maxYear(Integer.valueOf(carSearchParts[3]));
@@ -174,18 +180,18 @@ public class SilvicultureBot extends TelegramLongPollingBot {
             if (carSearchParts.length > 1) {
                 return singletonList(new SendMessage().setText("Укажите номер поиска после команды удаления"));
             }
-            Supplier<Boolean> searchAction = () -> customer.getSearches().remove(customer.getSearches().get(Integer.parseInt(carSearchParts[0])));
+            BooleanSupplier searchAction = () -> customer.getSearches().remove(customer.getSearches().get(Integer.parseInt(carSearchParts[0])));
             actionSuccessMessages.add(new SendMessage().setText("Поиск удален"));
             actionFailedMessages.add(new SendMessage().setText("Данный автомобиль не отслеживается"));
 
-            return searchAction.get() ? actionSuccessMessages : actionFailedMessages;
+            return searchAction.getAsBoolean() ? actionSuccessMessages : actionFailedMessages;
         } else {
             return emptyList();
         }
     }
 
     public void checkCarsAndPostNewIfAvailable() {
-        Customer.find.all().forEach(this::checkUpdatesForCustomer);
+        customerPersistenceAdapter.loadAllCustomers().forEach(this::checkUpdatesForCustomer);
     }
 
     private void checkUpdatesForCustomer(Customer customer) {
@@ -273,5 +279,4 @@ public class SilvicultureBot extends TelegramLongPollingBot {
     public String getBotToken() {
         return System.getenv("BotToken");
     }
-
 }

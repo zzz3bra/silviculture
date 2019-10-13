@@ -270,7 +270,7 @@
                 <configuration>
                     <appName>silviculture</appName>
                     <processTypes>
-                        <worker>java $JAVA_OPTS -cp target/classes:target/dependency/* com.zzz3bra.silviculture.WorkerProcess</worker>
+                        <worker>java $JAVA_OPTS -cp target/classes:target/dependency/* com.zzz3bra.silviculture.Launcher</worker>
                     </processTypes>
                 </configuration>
             </plugin>

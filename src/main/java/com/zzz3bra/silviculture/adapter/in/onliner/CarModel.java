@@ -1,4 +1,4 @@
-package com.zzz3bra.silviculture.data.gathering.onliner;
+package com.zzz3bra.silviculture.adapter.in.onliner;
 
 import lombok.Data;
 

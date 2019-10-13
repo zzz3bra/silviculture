@@ -1,6 +1,5 @@
-package com.zzz3bra.silviculture.data;
+package com.zzz3bra.silviculture.domain;
 
-import com.zzz3bra.silviculture.data.gathering.Search;
 import io.ebean.Model;
 import io.ebean.annotation.DbJsonB;
 import lombok.EqualsAndHashCode;
@@ -20,9 +19,6 @@ import java.util.Set;
 @EqualsAndHashCode
 @ToString
 public class Customer extends Model {
-
-    public static final CustomerFinder find = new CustomerFinder();
-
     @Id
     private long id;
 

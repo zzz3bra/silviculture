@@ -1,4 +1,4 @@
-package com.zzz3bra.silviculture.data;
+package com.zzz3bra.silviculture.domain;
 
 import lombok.ToString;
 

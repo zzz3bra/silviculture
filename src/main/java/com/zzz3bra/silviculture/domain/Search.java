@@ -1,4 +1,4 @@
-package com.zzz3bra.silviculture.data.gathering;
+package com.zzz3bra.silviculture.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;

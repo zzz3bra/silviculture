@@ -1,13 +1,12 @@
-package com.zzz3bra.silviculture.data.gathering;
+package com.zzz3bra.silviculture.adapter.in.onliner;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.zzz3bra.silviculture.data.Ad;
-import com.zzz3bra.silviculture.data.Car;
-import com.zzz3bra.silviculture.data.gathering.onliner.Advertisement;
-import com.zzz3bra.silviculture.data.gathering.onliner.Response;
-import com.zzz3bra.silviculture.data.gathering.onliner.Result;
+import com.zzz3bra.silviculture.domain.Search;
+import com.zzz3bra.silviculture.application.Searcher;
+import com.zzz3bra.silviculture.domain.Ad;
+import com.zzz3bra.silviculture.domain.Car;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
 import org.apache.commons.lang3.tuple.MutablePair;
@@ -37,7 +36,7 @@ import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
-class OnlinerSearcher implements Searcher {
+public class OnlinerSearcher implements Searcher {
 
     private static final Pattern COST_PATTERN = Pattern.compile("(?!\\s)[0-9 ]{2,}(?=\\$<br>)");
     private static final Map<String, String> defaultParameters;
@@ -92,7 +91,7 @@ class OnlinerSearcher implements Searcher {
         return new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8);
     }
 
-    OnlinerSearcher(String manufacturersJsonPath, String manModelsJsonPath) {
+    public OnlinerSearcher(String manufacturersJsonPath, String manModelsJsonPath) {
         try {
             this.ids = parseIds(readFile(manufacturersJsonPath), readFile(manModelsJsonPath));
         } catch (IOException e) {
@@ -117,7 +116,7 @@ class OnlinerSearcher implements Searcher {
         }
         return result.getAdvertisements().entrySet().stream().map(entry -> {
             Advertisement ad = entry.getValue();
-            com.zzz3bra.silviculture.data.gathering.onliner.Car adCar = ad.getCar();
+            com.zzz3bra.silviculture.adapter.in.onliner.Car adCar = ad.getCar();
             Car car = new Car(adCar.getModel().getManufacturerName(), adCar.getModel().getName(), adCar.getYear(), adCar.getOdometerState(), adCar.getCostInUsd());
             return new Ad(entry.getKey(), ad.getTitle(), car, Stream.of(ad.getPhotos()).map(photo -> URI.create(photo.getImages().getOriginal())).collect(toList()), URI.create("https://ab.onliner.by/car/" + entry.getKey()));
         }).collect(toList());

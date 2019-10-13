@@ -1,7 +1,8 @@
-package com.zzz3bra.silviculture.data.gathering
+package com.zzz3bra.silviculture.domain;
 
 import com.opentable.db.postgres.embedded.EmbeddedPostgres
-import com.zzz3bra.silviculture.data.Customer
+import com.zzz3bra.silviculture.adapter.in.onliner.OnlinerSearcher
+import com.zzz3bra.silviculture.adapter.out.persistence.JpaCustomerPersistenceAdapter
 import groovy.sql.Sql
 import io.ebean.Ebean
 import io.ebean.EbeanServer
@@ -119,6 +120,7 @@ class OnlinerSearcherTest extends Specification {
 
     def "na ebean test"() {
         given:
+        JpaCustomerPersistenceAdapter customerPersistenceAdapter = new JpaCustomerPersistenceAdapter();
         Customer customer = new Customer();
         customer.name = "Hello world";
         customer.searches = [Search.builder().manufacturer("Honda").minYear(2010).build()];
@@ -126,13 +128,13 @@ class OnlinerSearcherTest extends Specification {
         customer.save();
 
         expect:
-        Customer foundHello = Customer.find.byId(1L);
+        Customer foundHello = customerPersistenceAdapter.loadOneCustomersById(1L).get();
         foundHello.searches.every { it.manufacturer == "Honda"};
 
         when:
         foundHello.searches.add(Search.builder().manufacturer("Nissan").minYear(2010).build());
         foundHello.update();
-        customer = Customer.find.byId(1L);
+        customer = customerPersistenceAdapter.loadOneCustomersById(1L).get();
 
         then:
         customer.searches.each {
@@ -147,22 +149,22 @@ class OnlinerSearcherTest extends Specification {
         customer.update();
 
         then:
-        Customer.find.byId(1L).viewedAdsIdsBySearcher.get(onlinerSearcher.getTechnicalName()).size() == 3
+        customerPersistenceAdapter.loadOneCustomersById(1L).get().viewedAdsIdsBySearcher.get(onlinerSearcher.getTechnicalName()).size() == 3
 
         when:
-        customer = Customer.find.byId(1L);
+        customer = customerPersistenceAdapter.loadOneCustomersById(1L).get();
         customer.viewedAdsIdsBySearcher.get(onlinerSearcher.getTechnicalName()).add("4");
         customer.setViewedAdsIdsBySearcher(new HashMap<>(customer.viewedAdsIdsBySearcher));
         customer.update();
 
         then:
-        Customer.find.byId(1L).getViewedAdsIdsBySearcher().get(onlinerSearcher.getTechnicalName()).size() == 4
+        customerPersistenceAdapter.loadOneCustomersById(1L).get().getViewedAdsIdsBySearcher().get(onlinerSearcher.getTechnicalName()).size() == 4
 
         when:
-        Customer.find.byId(1L).delete();
+        customerPersistenceAdapter.loadOneCustomersById(1L).get().delete();
 
         then:
-        Customer.find.all().isEmpty()
+        customerPersistenceAdapter.loadAllCustomers().isEmpty()
 
     }
 }
