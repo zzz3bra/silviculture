@@ -233,7 +233,6 @@ public class ChatWithUserBot extends TelegramLongPollingBot {
                             } catch (Exception e) {
                                 failedAds.add(ad.id);
                                 LOGGER.error("search and send new cars into chat failed", e);
-                                LOGGER.error("{}", e.toString());
                             }
                         });
                     }
