@@ -83,7 +83,7 @@ public class OnlinerSearcher implements Searcher {
             final long costInUsd = Double.valueOf(ad.getPrice().getAmount()).longValue();//hopefully most of cars will use USD
             final long mileageInKilometers = ad.getSpecs().getOdometer().getValue();//hopefully most of cars will use kilometers
             Car car = new Car(ad.getManufacturer().getName(), ad.getModel().getName(), ad.getSpecs().getYear(), mileageInKilometers, costInUsd);
-            return new Ad(String.valueOf(ad.getId()), ad.getTitle(), car, Stream.of(ad.getPhotos()).map(photo -> URI.create(photo.getImages().getOriginal())).collect(toList()), URI.create("https://ab.onliner.by/audi/100/" + ad.getId()));
+            return new Ad(String.valueOf(ad.getId()), ad.getTitle(), car, Stream.of(ad.getPhotos()).map(photo -> URI.create(photo.getImages().getOriginal())).collect(toList()), URI.create(ad.getHtml_url()));
         }).collect(toList());
     }
 

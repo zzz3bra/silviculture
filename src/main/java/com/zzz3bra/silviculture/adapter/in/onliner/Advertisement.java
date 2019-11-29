@@ -9,6 +9,7 @@ public class Advertisement {
     private long id;
     private Price price;
     private String title;
+    private String html_url;
     private Photo[] photos;
     private Specs specs;
     private Manufacturer manufacturer;
