@@ -6,7 +6,11 @@ import lombok.Data;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Advertisement {
+    private long id;
+    private Price price;
     private String title;
     private Photo[] photos;
-    private Car car;
+    private Specs specs;
+    private Manufacturer manufacturer;
+    private Model model;
 }

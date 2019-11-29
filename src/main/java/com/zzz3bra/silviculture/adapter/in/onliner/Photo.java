@@ -6,6 +6,5 @@ import lombok.Data;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Photo {
-    private String comment;
     private Images images;
 }

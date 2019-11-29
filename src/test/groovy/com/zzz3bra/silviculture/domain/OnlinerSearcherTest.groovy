@@ -16,12 +16,10 @@ import java.sql.Connection
 
 class OnlinerSearcherTest extends Specification {
 
-    private static final String ONLINER_URL = "https://ab.onliner.by/search"
-    private static final String MANUFACTURERS = "onliner/Manufacturers.json"
-    private static final String MANUFACTURERS_MODELS = "onliner/ManufacturersModel.json"
+    private static final String ONLINER_URL = "https://ab.onliner.by/sdapi/ab.api/search/vehicles"
     private static final int DEFAULT_PAGE_SIZE = 50
 
-    private static OnlinerSearcher onlinerSearcher = new OnlinerSearcher(MANUFACTURERS, MANUFACTURERS_MODELS)
+    private static OnlinerSearcher onlinerSearcher = new OnlinerSearcher()
     @Shared
     private static DataSource postgresDatabase = EmbeddedPostgres.builder().setPort(5432).start().postgresDatabase
     private Connection connection = postgresDatabase.connection
@@ -34,12 +32,6 @@ class OnlinerSearcherTest extends Specification {
             return true;
         } catch (IOException e) {
             return false;
-        }
-    }
-
-    def setupSpec() {
-        [MANUFACTURERS, MANUFACTURERS_MODELS].each {
-            assert ClassLoader.systemClassLoader.getResource(it)
         }
     }
 
@@ -74,7 +66,7 @@ class OnlinerSearcherTest extends Specification {
     def "Should be able to parse ONLINER IDs and get #manufacturer #model"() {
         given:
         def models = onlinerSearcher.supportedManufacturersAndModels()
-        assert models.size() == 156
+        assert models.size() == 159
 
         expect:
         models.get(manufacturer).contains(model)

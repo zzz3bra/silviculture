@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 public enum AdvertisementSearchers implements Searcher {
-    ONLINER(new OnlinerSearcher("onliner/Manufacturers.json", "onliner/ManufacturersModel.json"));
+    ONLINER(new OnlinerSearcher());
 
     private final Searcher searcher;
 
