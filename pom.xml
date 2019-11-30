@@ -12,8 +12,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>1.8</java.version>
-        <groovy.version>2.5.7</groovy.version>
-        <jackson.version>2.9.10</jackson.version>
+        <groovy.version>2.5.8</groovy.version>
+        <jackson.version>2.10.1</jackson.version>
         <ebean.version>11.41.2</ebean.version>
         <apache.httpclient.version>4.5.10</apache.httpclient.version>
         <apache.commons-lang3.version>3.9</apache.commons-lang3.version>
@@ -101,16 +101,24 @@
             <version>1.18.10</version>
             <scope>provided</scope>
         </dependency>
+
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>1.7.25</version>
+            <version>1.7.28</version>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>1.2.3</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
+
         <dependency>
             <groupId>org.spockframework</groupId>
             <artifactId>spock-core</artifactId>
@@ -131,7 +139,7 @@
         <dependency>
             <groupId>com.opentable.components</groupId>
             <artifactId>otj-pg-embedded</artifactId>
-            <version>0.13.1</version>
+            <version>0.13.3</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>
