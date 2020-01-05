@@ -12,3 +12,7 @@
 - channel name - `@silviculture`
 
 #### Feel free to subscribe our Telegram channel!
+
+
+### Developer Section
+[Connect With VisualVM tutorial](https://blog.heroku.com/in-the-cloud-no-one-can-hear-your-outofmemoryerror)
