@@ -10,8 +10,8 @@
     </root>
 
 
-    <logger name="org.apache.http" level="WARN"/>
-    <logger name="io.restassured" level="INFO"/>
+    <logger name="org.apache.http" level="DEBUG"/>
+    <logger name="io.restassured" level="DEBUG"/>
 
     <!-- Testing with Docker containers -->
     <logger name="io.ebean.docker" level="TRACE"/>
