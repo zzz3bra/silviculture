@@ -83,7 +83,7 @@ public class OnlinerSearcher implements Searcher {
         ofNullable(search.getMinYear()).ifPresent(minYear -> parametersMap.put("min-year", minYear.toString()));
 
         Response result = with().queryParams(parametersMap).contentType(ContentType.URLENC).get("https://ab.onliner.by/sdapi/ab.api/search/vehicles").getBody().as(Response.class, ObjectMapperType.JACKSON_2);
-        if (StringUtils.isNotBlank(result.getMessage()) && StringUtils.isNotBlank(result.getErrors())) {
+        if (StringUtils.isNotBlank(result.getMessage())) {
             LOGGER.error("{} {}", result.getMessage(), result.getErrors());
             LOGGER.error("request parameters: {}", parametersMap);
             LOGGER.error("Search: {}", search);
