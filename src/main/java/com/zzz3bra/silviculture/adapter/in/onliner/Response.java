@@ -9,4 +9,6 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Response {
     private List<Advertisement> adverts;
+    private String message;
+    private String errors;
 }

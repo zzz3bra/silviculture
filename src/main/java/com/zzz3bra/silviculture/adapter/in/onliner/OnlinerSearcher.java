@@ -6,13 +6,17 @@ import com.zzz3bra.silviculture.domain.Car;
 import com.zzz3bra.silviculture.domain.Search;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +35,7 @@ import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.tuple.Pair.of;
 
 public class OnlinerSearcher implements Searcher {
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(OnlinerSearcher.class);
     private static final Pattern COST_PATTERN = Pattern.compile("(?!\\s)[0-9 ]{2,}(?=\\$<br>)");
     private static final Map<String, String> defaultParameters;
 
@@ -79,6 +83,12 @@ public class OnlinerSearcher implements Searcher {
         ofNullable(search.getMinYear()).ifPresent(minYear -> parametersMap.put("min-year", minYear.toString()));
 
         Response result = with().queryParams(parametersMap).contentType(ContentType.URLENC).get("https://ab.onliner.by/sdapi/ab.api/search/vehicles").getBody().as(Response.class, ObjectMapperType.JACKSON_2);
+        if (StringUtils.isNotBlank(result.getMessage()) && StringUtils.isNotBlank(result.getErrors())) {
+            LOGGER.error("{} {}", result.getMessage(), result.getErrors());
+            LOGGER.error("request parameters: {}", parametersMap);
+            LOGGER.error("Search: {}", search);
+            return Collections.emptyList();
+        }
         return result.getAdverts().stream().map(ad -> {
             final long costInUsd = Double.valueOf(ad.getPrice().getAmount()).longValue();//hopefully most of cars will use USD
             final long mileageInKilometers = ad.getSpecs().getOdometer().getValue();//hopefully most of cars will use kilometers
