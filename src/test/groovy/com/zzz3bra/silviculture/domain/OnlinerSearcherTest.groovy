@@ -66,7 +66,7 @@ class OnlinerSearcherTest extends Specification {
     def "Should be able to parse ONLINER IDs and get #manufacturer #model"() {
         given:
         def models = onlinerSearcher.supportedManufacturersAndModels()
-        assert models.size() == 159
+        assert models.size() > 150
 
         expect:
         models.get(manufacturer).contains(model)
