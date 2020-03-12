@@ -74,7 +74,7 @@ class OnlinerSearcherTest extends Specification {
         where:
         manufacturer | model
         "honda"      | "civic"
-        "bmw"        | "740"
+        "bmw"        | "7 серия"
         "toyota"     | "supra"
         "rover"      | "streetwise"
     }
