@@ -14,7 +14,7 @@
         <java.version>1.8</java.version>
         <groovy.version>2.5.8</groovy.version>
         <jackson.version>2.10.2</jackson.version>
-        <ebean.version>11.41.2</ebean.version>
+        <ebean.version>12.2.1</ebean.version>
         <slf4j.version>1.7.29</slf4j.version>
         <apache.httpclient.version>4.5.10</apache.httpclient.version>
         <apache.commons-lang3.version>3.9</apache.commons-lang3.version>
@@ -94,7 +94,7 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.2.9</version>
+            <version>42.2.13</version>
         </dependency>
         <dependency>
             <groupId>org.telegram</groupId>
