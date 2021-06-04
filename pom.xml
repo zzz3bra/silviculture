@@ -16,7 +16,7 @@
         <jackson.version>2.10.2</jackson.version>
         <ebean.version>11.41.2</ebean.version>
         <slf4j.version>1.7.29</slf4j.version>
-        <apache.httpclient.version>4.5.10</apache.httpclient.version>
+        <apache.httpclient.version>4.5.13</apache.httpclient.version>
         <apache.commons-lang3.version>3.9</apache.commons-lang3.version>
         <apache.commons-io.version>2.6</apache.commons-io.version>
     </properties>
